@@ -1,0 +1,277 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(cuid())
+  firstName      String
+  lastName       String
+  username       String    @unique
+  email          String    @unique
+  googleSubject  String?   @unique
+  phone          String?
+  phoneVerified  Boolean   @default(false)
+  phoneVerificationCodeHash String?
+  phoneVerificationExpires  DateTime?
+  emailVerified  Boolean   @default(true)
+  emailVerificationTokenHash String?
+  emailVerificationExpires   DateTime?
+  emailVerificationSentAt    DateTime?
+  passwordResetTokenHash     String?
+  passwordResetExpires       DateTime?
+  passwordResetSentAt        DateTime?
+  passwordHash   String
+  avatarUrl      String?
+  requestMessage String?
+  language       String    @default("he")
+
+  status UserStatus @default(active)
+  role   UserRole   @default(user)
+
+  sessions  Session[]
+  userPermissions UserPermission[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdMusicals Musical[] @relation("MusicalCreatedBy")
+  updatedMusicals Musical[] @relation("MusicalUpdatedBy")
+  createdClips      Clip[]    @relation("ClipCreatedBy")
+  updatedClips      Clip[]    @relation("ClipUpdatedBy")
+  comments          Comment[]
+  moderatedComments Comment[] @relation("CommentModeratedBy")
+  submittedCommentReports CommentReport[] @relation("CommentReportReporter")
+  reviewedCommentReports  CommentReport[] @relation("CommentReportReviewedBy")
+}
+
+enum UserRole {
+  user
+  editor
+  admin
+  superadmin
+}
+
+enum UserStatus {
+  active
+  pending
+  blocked
+}
+
+enum PermissionName {
+  musical_view
+  musical_create
+  musical_edit
+  musical_delete
+  clip_view
+  clip_create
+  clip_edit
+  clip_delete
+  user_view
+  user_manage
+  role_manage
+  editor_request_review
+  profile_edit
+}
+
+model Permission {
+  id String @id @default(cuid())
+  name PermissionName @unique
+
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+}
+
+model RolePermission {
+  id String @id @default(cuid())
+
+  role UserRole
+
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([role, permissionId])
+  @@index([permissionId])
+}
+
+model UserPermission {
+  id String @id @default(cuid())
+
+  userId String
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  permissionId String
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+  @@index([permissionId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  tokenHash    String   @unique
+  expiresAt    DateTime
+  userAgent    String?
+  ipAddress    String?
+
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Musical {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  description  String?
+
+  year         Int?
+  production   String?
+  thumbnailUrl String?
+  imagePath    String?
+  posterDisplayMode PosterDisplayMode @default(crop)
+  posterAspect PosterAspect @default(square)
+  emoji        String?
+
+  isPublished  Boolean  @default(false)
+  sortOrder    Int      @default(0)
+
+  createdById  String?
+  updatedById  String?
+
+  createdBy    User?    @relation("MusicalCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy    User?    @relation("MusicalUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  clips        Clip[]
+}
+
+enum PosterDisplayMode {
+  crop
+  fit
+}
+
+enum PosterAspect {
+  square
+  wide
+  tall
+}
+
+enum ClipSourceType {
+  youtube
+  upload
+}
+
+enum CommentStatus {
+  visible
+  hidden
+}
+
+enum CommentReportReason {
+  spam
+  abusive
+  irrelevant
+  other
+}
+
+enum CommentReportStatus {
+  open
+  reviewed
+  dismissed
+  actioned
+}
+
+model Clip {
+  id String @id @default(cuid())
+
+  title       String
+  description String?
+
+  sourceType ClipSourceType @default(youtube)
+
+  youtubeVideoId   String?
+  uploadedVideoUrl String?
+  uploadedThumbnailUrl String?
+
+  startSeconds Int  @default(0)
+  endSeconds   Int?
+
+  sortOrder Int @default(0)
+
+  musicalId String
+  musical   Musical @relation(fields: [musicalId], references: [id], onDelete: Cascade)
+
+  createdById String?
+  updatedById String?
+
+  createdBy User? @relation("ClipCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy User? @relation("ClipUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  comments Comment[]
+}
+
+model Comment {
+  id String @id @default(cuid())
+
+  clipId String
+  clip   Clip   @relation(fields: [clipId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  content String
+  status  CommentStatus @default(visible)
+
+  hiddenAt DateTime?
+  moderatedAt DateTime?
+
+  moderatedById String?
+  moderatedBy   User? @relation("CommentModeratedBy", fields: [moderatedById], references: [id], onDelete: SetNull)
+  reports       CommentReport[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clipId, status, createdAt])
+  @@index([userId, createdAt])
+  @@index([moderatedById])
+}
+
+model CommentReport {
+  id String @id @default(cuid())
+
+  commentId String
+  comment   Comment @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  reporterUserId String
+  reporterUser   User @relation("CommentReportReporter", fields: [reporterUserId], references: [id], onDelete: Cascade)
+
+  reason  CommentReportReason
+  details String?
+  status  CommentReportStatus @default(open)
+
+  reviewedAt DateTime?
+
+  reviewedById String?
+  reviewedBy   User? @relation("CommentReportReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([commentId, status, createdAt])
+  @@index([reporterUserId, status, createdAt])
+  @@index([reviewedById])
+}

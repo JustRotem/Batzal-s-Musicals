@@ -1,0 +1,1 @@
+export const MAX_CLIP_VIDEO_FILE_SIZE_BYTES = 1536 * 1024 * 1024;
