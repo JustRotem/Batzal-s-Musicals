@@ -6,7 +6,14 @@ export function buildAvatarUrl(
     return null;
   }
 
-  if (!version || avatarUrl.startsWith("blob:") || avatarUrl.startsWith("data:")) {
+  const isLocalUpload = avatarUrl.startsWith("/uploads/avatars/");
+
+  if (
+    !version ||
+    !isLocalUpload ||
+    avatarUrl.startsWith("blob:") ||
+    avatarUrl.startsWith("data:")
+  ) {
     return avatarUrl;
   }
 

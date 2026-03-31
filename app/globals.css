@@ -1444,6 +1444,7 @@ textarea:focus-visible {
 .site-header-actions {
   grid-area: actions;
   justify-self: end;
+  min-width: 0;
 }
 
 .site-header-brand {
@@ -1781,6 +1782,8 @@ textarea:focus-visible {
 
 .profile-menu {
   position: relative;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .profile-menu.open .profile-trigger {
@@ -5713,7 +5716,7 @@ html[dir="ltr"] input[type="email"]::placeholder {
     padding: 4px 8px;
     gap: 8px;
     min-width: 0;
-    max-width: min(48vw, 220px);
+    max-width: min(100%, 220px);
   }
 
   .profile-trigger-text {
@@ -5722,6 +5725,7 @@ html[dir="ltr"] input[type="email"]::placeholder {
     max-width: 100%;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1 1 auto;
   }
 
   .profile-trigger .user-avatar-md,

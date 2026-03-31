@@ -40,7 +40,6 @@ export default function NewMusicalForm({
   return (
     <form
       action={handleSubmit}
-      encType="multipart/form-data"
       className="form-grid content-editor-form"
       dir={language === "he" ? "rtl" : "ltr"}
       style={{
