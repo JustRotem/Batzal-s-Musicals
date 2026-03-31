@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getAppTitle } from "@/lib/app-config";
 import { getCurrentUser } from "@/lib/auth";
 import { findVisibleMusicals } from "@/lib/musicals";
 import {
@@ -13,10 +14,18 @@ import { formatMessage, getTranslations } from "@/lib/i18n";
 import { getCurrentLanguage } from "@/lib/i18n-server";
 import { getMusicalDescriptionText } from "@/lib/musical-description";
 
-export const metadata: Metadata = {
-  title: "Batzal's Musicals",
-  description: "ספריית המחזות של Batzal's Musicals עם חיפוש, קליפים, חשבונות וניהול תוכן.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const language = await getCurrentLanguage();
+  const appTitle = getAppTitle(language);
+
+  return {
+    title: appTitle,
+    description:
+      language === "he"
+        ? `ספריית המחזות של ${appTitle} עם חיפוש, קליפים, חשבונות וניהול תוכן.`
+        : `${appTitle} - a musical library with clips, accounts, search, and content management.`,
+  };
+}
 
 export default async function HomePage() {
   const language = await getCurrentLanguage();
@@ -65,7 +74,7 @@ export default async function HomePage() {
             <div className="hero-icon">🎶</div>
 
             <div>
-              <h1 className="hero-title">{t.home.heroTitle}</h1>
+              <h1 className="hero-title">{getAppTitle(language)}</h1>
               <p className="hero-text">{t.home.heroText}</p>
             </div>
           </div>

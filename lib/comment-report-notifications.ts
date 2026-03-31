@@ -1,6 +1,7 @@
 import { PermissionName, UserRole, UserStatus } from "@prisma/client";
 import { sendAccountEmail, getAccountEmailConfig } from "@/lib/account-email";
 import { renderAccountEmailTemplate } from "@/lib/account-email-template";
+import { getAppTitle } from "@/lib/app-config";
 import { db } from "@/lib/db";
 import { normalizeLanguage, type AppLanguage } from "@/lib/i18n";
 import { getCommentReportReasonLabel } from "@/lib/comment-reports";
@@ -34,7 +35,7 @@ function getReportNotificationCopy(language: AppLanguage, input: {
 }) {
   if (language === "en") {
     return {
-      subject: `New reported comment in Batzal's Musicals: ${input.reasonLabel}`,
+      subject: `New reported comment in ${getAppTitle(language)}: ${input.reasonLabel}`,
       template: renderAccountEmailTemplate({
         preheader: "A new clip comment report is waiting in the moderation queue.",
         eyebrow: "Comment Moderation",
@@ -64,7 +65,7 @@ function getReportNotificationCopy(language: AppLanguage, input: {
   }
 
   return {
-    subject: `דיווח תגובה חדש ב-Batzal's Musicals: ${input.reasonLabel}`,
+    subject: `דיווח תגובה חדש ב-${getAppTitle(language)}: ${input.reasonLabel}`,
     template: renderAccountEmailTemplate({
       preheader: "דיווח חדש על תגובה ממתין עכשיו לבדיקה בתור המודרציה.",
       eyebrow: "Comment Moderation",

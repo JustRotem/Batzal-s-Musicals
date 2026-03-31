@@ -1,3 +1,5 @@
+import { APP_TITLE_HE, APP_TITLE_EN } from "@/lib/app-config";
+
 export type AppLanguage = "he" | "en";
 
 export const LANGUAGE_COOKIE_NAME = "my_musicals_language";
@@ -18,9 +20,9 @@ export function getLanguageLabel(language: AppLanguage) {
 const translations = {
   he: {
     metadata: {
-      appName: "Batzal's Musicals",
+      appName: APP_TITLE_HE,
       description:
-        "Batzal's Musicals - ספריית מחזות, קטעים וניהול תוכן עם חוויית צפייה וחשבון מלאה.",
+        `${APP_TITLE_HE} - ספריית מחזות, קטעים וניהול תוכן עם חוויית צפייה וחשבון מלאה.`,
     },
     common: {
       account: "חשבון",
@@ -46,7 +48,7 @@ const translations = {
     },
     header: {
       homeAria: "דף הבית",
-      brand: "מחזות זמר",
+      brand: APP_TITLE_HE,
       searchPlaceholder: "חיפוש מחזות וקליפים...",
       searchAria: "חיפוש מחזות וקליפים",
       searching: "מחפש...",
@@ -229,7 +231,7 @@ const translations = {
       },
     },
     home: {
-      heroTitle: "Batzal's Musicals",
+      heroTitle: APP_TITLE_HE,
       heroText:
         "גלו, ארגנו וחזרו לרגעים האהובים עליכם ממחזות זמר.",
       musicalsTitle: "מחזות זמר במערכת",
@@ -612,9 +614,9 @@ const translations = {
   },
   en: {
     metadata: {
-      appName: "Batzal's Musicals",
+      appName: APP_TITLE_EN,
       description:
-        "Batzal's Musicals - a musical library with clips, accounts, search, and content management.",
+        `${APP_TITLE_EN} - a musical library with clips, accounts, search, and content management.`,
     },
     common: {
       account: "Account",
@@ -640,7 +642,7 @@ const translations = {
     },
     header: {
       homeAria: "Home",
-      brand: "Batzal's Musicals",
+      brand: APP_TITLE_EN,
       searchPlaceholder: "Search musicals and clips...",
       searchAria: "Search musicals and clips",
       searching: "Searching...",
@@ -820,7 +822,7 @@ const translations = {
       },
     },
     home: {
-      heroTitle: "Batzal's Musicals",
+      heroTitle: APP_TITLE_EN,
       heroText:
         "Discover, organize, and relive your favorite musical moments.",
       musicalsTitle: "Musicals in the system",

@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "crypto";
 import { getAccountEmailConfig, sendAccountEmail } from "@/lib/account-email";
 import { renderAccountEmailTemplate } from "@/lib/account-email-template";
+import { DEFAULT_APP_TITLE } from "@/lib/app-config";
 import { db } from "@/lib/db";
 
 const PASSWORD_RESET_TTL_MS = 1000 * 60 * 60;
@@ -45,13 +46,13 @@ export async function sendPasswordResetMessage({
 }) {
   const { appUrl } = getAccountEmailConfig();
   const resetUrl = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}`;
-  const subject = "קישור לאיפוס הסיסמה שלך ב-Batzal's Musicals";
+  const subject = `קישור לאיפוס הסיסמה שלך ב-${DEFAULT_APP_TITLE}`;
   const { subjectReadyHtml: html, subjectReadyText: text } = renderAccountEmailTemplate({
     preheader: "התקבלה בקשה לבחירת סיסמה חדשה לחשבון שלך.",
     eyebrow: "Password Recovery",
     title: "איפוס סיסמה",
     intro:
-      "התקבלה בקשה לבחירת סיסמה חדשה עבור החשבון שלך ב-Batzal's Musicals.",
+      `התקבלה בקשה לבחירת סיסמה חדשה עבור החשבון שלך ב-${DEFAULT_APP_TITLE}.`,
     details: [
       "הקישור תקף לזמן מוגבל ונועד לשימוש חד-פעמי בלבד.",
       "לאחר בחירת סיסמה חדשה, יהיה אפשר להתחבר מיד עם הסיסמה המעודכנת.",

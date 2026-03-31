@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getAppTitle } from "@/lib/app-config";
 import SearchFiltersBar from "@/components/SearchFiltersBar";
 import HighlightedText from "@/components/HighlightedText";
 import MusicalArtwork from "@/components/MusicalArtwork";
@@ -7,10 +8,18 @@ import { formatMessage, getTranslations } from "@/lib/i18n";
 import { getCurrentLanguage } from "@/lib/i18n-server";
 import { searchContent } from "@/lib/search";
 
-export const metadata: Metadata = {
-  title: "חיפוש | Batzal's Musicals",
-  description: "חיפוש מחזות, קטעים ותוכן ב-Batzal's Musicals.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const language = await getCurrentLanguage();
+  const appTitle = getAppTitle(language);
+
+  return {
+    title: language === "he" ? `חיפוש | ${appTitle}` : `Search | ${appTitle}`,
+    description:
+      language === "he"
+        ? `חיפוש מחזות, קטעים ותוכן ב-${appTitle}.`
+        : `Search musicals, clips, and content in ${appTitle}.`,
+  };
+}
 
 type SearchPageProps = {
   searchParams?: Promise<{

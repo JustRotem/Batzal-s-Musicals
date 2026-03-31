@@ -1,3 +1,4 @@
+import { DEFAULT_APP_TITLE } from "@/lib/app-config";
 import { assertProductionReadyEnv, getAppUrl } from "@/lib/env";
 
 type AccountEmailInput = {
@@ -100,7 +101,7 @@ function summarizeUrlHost(value: string) {
 export function getAccountEmailConfig() {
   const fromName =
     process.env.FROM_EMAIL_NAME?.trim() ||
-    (process.env.NODE_ENV === "production" ? "" : "Batzal's Musicals");
+    (process.env.NODE_ENV === "production" ? "" : DEFAULT_APP_TITLE);
   const fromEmail =
     process.env.FROM_EMAIL?.trim() ||
     (process.env.NODE_ENV === "production" ? "" : "no-reply@batzal.net");

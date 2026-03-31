@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "crypto";
 import { getAccountEmailConfig, sendAccountEmail } from "@/lib/account-email";
 import { renderAccountEmailTemplate } from "@/lib/account-email-template";
+import { DEFAULT_APP_TITLE } from "@/lib/app-config";
 
 const EMAIL_VERIFICATION_TTL_MS = 1000 * 60 * 60 * 24;
 export const EMAIL_VERIFICATION_RESEND_COOLDOWN_MS = 1000 * 60;
@@ -52,14 +53,14 @@ export async function sendEmailVerificationMessage({
     appUrlHost: new URL(appUrl).host,
   });
 
+  const appTitle = DEFAULT_APP_TITLE;
   const verificationUrl = `${appUrl}/verify-email?token=${encodeURIComponent(token)}`;
-  const subject = "אימות כתובת האימייל שלך ב-Batzal's Musicals";
+  const subject = `אימות כתובת האימייל שלך ב-${appTitle}`;
   const { subjectReadyHtml: html, subjectReadyText: text } = renderAccountEmailTemplate({
     preheader: "השלב האחרון לפתיחת החשבון שלך הוא אימות כתובת האימייל.",
     eyebrow: "Email Verification",
     title: "אימות כתובת האימייל",
-    intro:
-      "כדי להשלים את פתיחת החשבון שלך ב-Batzal's Musicals, צריך לאשר שזו כתובת האימייל שלך.",
+    intro: `כדי להשלים את פתיחת החשבון שלך ב-${appTitle}, צריך לאשר שזו כתובת האימייל שלך.`,
     details: [
       "הלחיצה על הכפתור תפעיל את החשבון ותאפשר להתחבר למערכת כרגיל.",
       "הקישור מיועד לחשבון הזה בלבד ונשלח כחלק מתהליך הרשמה מאובטח.",

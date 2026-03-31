@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getAppTitle } from "@/lib/app-config";
 import { getCurrentUser } from "@/lib/auth";
 import HeaderSearch from "@/components/HeaderSearch";
 import UserMenu from "@/components/UserMenu";
@@ -45,7 +46,7 @@ export default async function SiteHeader({
             <span className="site-brand-icon" aria-hidden="true">
               <span className="site-brand-monogram">BM</span>
             </span>
-            <span className="site-brand-text">{t.header.brand}</span>
+            <span className="site-brand-text">{getAppTitle(language)}</span>
           </Link>
         </div>
 

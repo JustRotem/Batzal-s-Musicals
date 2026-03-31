@@ -1,4 +1,5 @@
 import { getAccountEmailConfig } from "@/lib/account-email";
+import { DEFAULT_APP_TITLE } from "@/lib/app-config";
 
 type AccountEmailTemplateInput = {
   preheader?: string;
@@ -229,7 +230,7 @@ export function renderAccountEmailTemplate(
                             ${escapeHtml(input.footerText)}
                           </div>
                           <div style="font-size:12px; line-height:1.8; color:#94a3b8; margin-top:8px;">
-                            Batzal&apos;s Musicals
+                            ${escapeHtml(DEFAULT_APP_TITLE)}
                           </div>
                         </td>
                       </tr>
@@ -262,7 +263,7 @@ export function renderAccountEmailTemplate(
     input.closingText ?? null,
     "",
     input.footerText,
-    "Batzal's Musicals",
+    DEFAULT_APP_TITLE,
   ]
     .filter(Boolean)
     .join("\n");

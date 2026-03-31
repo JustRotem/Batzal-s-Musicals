@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { sendAccountEmail, AccountEmailDeliveryError, getAccountEmailConfig } from "@/lib/account-email";
 import { renderAccountEmailTemplate } from "@/lib/account-email-template";
+import { DEFAULT_APP_TITLE  } from "@/lib/app-config";
 import { PERMISSIONS } from "@/lib/permissions";
 import { UserRole } from "@prisma/client";
 
@@ -122,7 +123,7 @@ export async function notifyAdminsAboutEditorRequest(requestUser: RequestUser) {
     noteTitle: "למה קיבלת את המייל הזה?",
     noteText:
       "המייל נשלח לחשבונות שיש להם הרשאה לסקור בקשות עורך, כדי שיהיה אפשר לטפל בבקשה בזמן.",
-    footerText: "המייל נשלח כחלק מזרימת ניהול ההרשאות של Batzal's Musicals.",
+    footerText: `המייל נשלח כחלק מזרימת ניהול ההרשאות של ${DEFAULT_APP_TITLE}.`,
   });
 
   await Promise.all(
@@ -130,7 +131,7 @@ export async function notifyAdminsAboutEditorRequest(requestUser: RequestUser) {
       try {
         await sendEditorRequestEmail({
           to: recipient.email,
-          subject: "בקשת גישת עריכה חדשה ב-Batzal's Musicals",
+          subject: `בקשת גישת עריכה חדשה ב-${DEFAULT_APP_TITLE}`,
           template,
         });
       } catch (error) {

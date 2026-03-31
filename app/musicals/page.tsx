@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { getAppTitle } from "@/lib/app-config";
 import { findVisibleMusicals } from "@/lib/musicals";
 import MusicalArtwork from "@/components/MusicalArtwork";
 import { getMusicalDescriptionText } from "@/lib/musical-description";
@@ -7,10 +8,21 @@ import { getCurrentUser } from "@/lib/auth";
 import { getCurrentLanguage } from "@/lib/i18n-server";
 import { canManageMusicalContent } from "@/lib/permissions";
 
-export const metadata: Metadata = {
-  title: "כל המחזות | Batzal's Musicals",
-  description: "דפדוף בכל המחזות הזמינים ב-Batzal's Musicals.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const language = await getCurrentLanguage();
+  const appTitle = getAppTitle(language);
+
+  return {
+    title:
+      language === "he"
+        ? `כל המחזות | ${appTitle}`
+        : `All Musicals | ${appTitle}`,
+    description:
+      language === "he"
+        ? `דפדוף בכל המחזות הזמינים ב-${appTitle}.`
+        : `Browse all musicals available in ${appTitle}.`,
+  };
+}
 
 function getMusicalsPageCopy(language: "he" | "en") {
   if (language === "en") {
