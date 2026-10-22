@@ -19,7 +19,8 @@ function buildFullName(user: {
   lastName: string;
   username?: string;
 }) {
-  return `${user.firstName} ${user.lastName}`.trim() || user.username || "משתמש";
+  // People are identified by their username (first and last name are no longer used).
+  return user.username || `${user.firstName} ${user.lastName}`.trim() || "משתמש";
 }
 
 async function getEditorRequestReviewerRoles() {

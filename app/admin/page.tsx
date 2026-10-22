@@ -196,7 +196,7 @@ function matchesUserQuery(
   }
 
   const haystack = normalizeSearchText(
-    [user.firstName, user.lastName, `${user.firstName} ${user.lastName}`, user.username, user.email].join(" "),
+    [user.username, user.email].join(" "),
   );
 
   return haystack.includes(normalizeSearchText(query));

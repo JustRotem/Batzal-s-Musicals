@@ -1411,7 +1411,6 @@ textarea:focus-visible {
   width: 100%;
   height: auto;
   min-height: var(--header-height);
-  padding: 0 var(--page-gutter);
   gap: 0;
   direction: inherit;
 }
@@ -1419,7 +1418,7 @@ textarea:focus-visible {
 .site-header-inner {
   width: 100%;
   max-width: 1180px;
-  min-height: var(--header-height);
+  min-height: calc(var(--header-height) - 1px);
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas: "brand search actions";
@@ -5595,7 +5594,6 @@ html[dir="ltr"] input[type="email"]::placeholder {
 
   .site-header {
     min-height: var(--header-height-mobile);
-    padding: 0 var(--page-gutter-mobile);
   }
 
   .site-header-inner {
