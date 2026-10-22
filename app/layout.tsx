@@ -36,7 +36,7 @@ export default async function RootLayout({
   return (
     <html lang={language} dir={direction}>
       <head>
-        <link rel="stylesheet" href="https://static.batzal.net/batzal-bar.css?v=1" />
+        <link rel="stylesheet" href="https://static.batzal.net/batzal-bar.css?v=6" />
       </head>
       <body>
         <SiteHeader language={language} />

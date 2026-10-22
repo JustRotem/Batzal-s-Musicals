@@ -6069,3 +6069,33 @@ html[dir="ltr"] input[type="email"]::placeholder {
   flex: 1 1 auto;
   min-width: 0;
 }
+
+/* Account button in the shared bar: same look as the other Batzal sites */
+.site-header .profile-trigger {
+  min-height: 40px;
+  gap: 8px;
+  padding: 0 12px 0 6px;
+  background: transparent;
+  border: 1px solid var(--bz-border, rgba(255, 255, 255, 0.16));
+  box-shadow: none;
+  color: var(--bz-text, var(--text));
+}
+
+.site-header .profile-trigger:hover {
+  border-color: var(--bz-accent, var(--accent));
+}
+
+.site-header .profile-trigger-avatar {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  font-size: 13px;
+}
+
+.site-header .profile-trigger-text {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 600;
+  color: var(--bz-text, var(--text));
+}
