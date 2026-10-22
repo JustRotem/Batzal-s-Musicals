@@ -29,11 +29,4 @@ export const BATZAL_SITES: BatzalSite[] = [
     en: "Blog",
     icon: "M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3V4zM8 20a3 3 0 01-3-3",
   },
-  {
-    host: "twisted.batzal.net",
-    href: "https://twisted.batzal.net",
-    he: "Twisted",
-    en: "Twisted",
-    icon: "M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z",
-  },
 ];
