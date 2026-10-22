@@ -111,6 +111,7 @@ export default async function MusicalsPage() {
             </div>
           ) : (
             <div
+              className="musicals-grid"
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
@@ -125,10 +126,20 @@ export default async function MusicalsPage() {
                   <Link
                     key={musical.id}
                     href={`/musicals/${musical.slug}`}
-                    className="show-card musicals-grid-card"
+                    className={`show-card musicals-grid-card ${musical.posterAspect === "wide" ? "is-wide" : ""}`.trim()}
                     style={{ cursor: "pointer" }}
                   >
-                    <div className="musical-card-artwork">
+                    <div
+                      className={`musical-card-artwork ${
+                        musical.posterAspect === "wide"
+                          ? "is-wide"
+                          : musical.posterAspect === "square"
+                            ? "is-square"
+                            : musical.posterAspect === "tall"
+                              ? "is-tall"
+                              : ""
+                      }`.trim()}
+                    >
                       <MusicalArtwork
                         imagePath={musical.imagePath}
                         posterDisplayMode={musical.posterDisplayMode}

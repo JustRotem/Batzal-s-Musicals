@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { getMusicalFormData, parseOptionalYear } from "../app/admin/musicals/actions";
+import { getMusicalFormData, parseOptionalYear } from "../lib/musical-form/helpers";
 import { saveUploadedImage } from "../lib/image-upload";
 
 const buildFormData = (entries: Array<[string, string | Blob]>) => {
@@ -24,7 +24,7 @@ describe("musical form parsing and validation helpers", () => {
     const result = getMusicalFormData(formData);
 
     assert.equal(result.title, "My Musical");
-    assert.equal(result.description, "A classic");
+    assert.equal(result.description, "<p>A classic</p>");
     assert.equal(result.yearRaw, "1999");
     assert.equal(result.posterDisplayMode, "fit");
     assert.equal(result.isPublished, true);

@@ -13,7 +13,7 @@
     "db:studio:local": "dotenv -e .env.studio -- prisma studio",
     "db:validate": "prisma validate",
     "release:check": "prisma validate && tsc --noEmit",
-    "test": "node --test --loader tsx"
+    "test": "node --import tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@fontsource/assistant": "^5.2.9",

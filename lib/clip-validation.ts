@@ -126,7 +126,7 @@ export const validateClipFormValues = ({
   return {
     ok: true,
     sourceType,
-    normalizedYouTubeVideoId,
+    normalizedYouTubeVideoId: normalizedYouTubeVideoId || null,
     resolvedStartSeconds,
     resolvedEndSeconds,
   };

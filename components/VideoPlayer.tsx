@@ -925,18 +925,18 @@ function VideoPlayer({
         <div ref={mountRef} style={{ width: "100%", height: "100%" }} />
         <div
           className="clip-skip-side-indicator"
-          style={{
-            position: "absolute",
-            top: 0,
-            bottom: 0,
-            left: skipDirection === "left" ? 0 : "auto",
-            right: skipDirection === "right" ? 0 : "auto",
-            width: "50%",
-            background: "rgba(255,255,255,0.08)",
-            opacity: skipDirection ? 1 : 0,
-            transition: "opacity 0.2s ease, transform 0.2s ease",
-            transform:
-              skipDirection === "left"
+            style={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: skipDirection === "left" ? 0 : "auto",
+              right: skipDirection === "right" ? 0 : "auto",
+              width: "50%",
+              background: "transparent",
+              opacity: skipDirection ? 1 : 0,
+              transition: "opacity 0.2s ease, transform 0.2s ease",
+              transform:
+                skipDirection === "left"
                 ? "translateX(-20px) scale(1)"
                 : skipDirection === "right"
                   ? "translateX(20px) scale(1)"

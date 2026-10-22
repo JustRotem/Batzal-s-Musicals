@@ -446,6 +446,7 @@ function YouTubeClipPreview({
           controls: 1,
           rel: 0,
           playsinline: 1,
+          fs: 1,
           start: startSeconds,
         },
         events: {

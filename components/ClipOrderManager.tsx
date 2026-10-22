@@ -38,6 +38,8 @@ export default function ClipOrderManager({
 }: ClipOrderManagerProps) {
   const t = getTranslations(language).contentEditor.musicals;
   const clipT = getTranslations(language).contentEditor.clips;
+  const moveUpLabel = language === "he" ? "הזז למעלה" : "Move up";
+  const moveDownLabel = language === "he" ? "הזז למטה" : "Move down";
   const [items, setItems] = useState(clips);
   const [savedOrderIds, setSavedOrderIds] = useState(() => clips.map((clip) => clip.id));
   const [draggedClipId, setDraggedClipId] = useState<string | null>(null);
@@ -141,6 +143,32 @@ export default function ClipOrderManager({
                 <div className="clip-order-details">
                   <strong>{clip.title}</strong>
                   <span>{clip.sourceType === "youtube" ? clipT.sourceYoutube : clipT.sourceUpload}</span>
+                </div>
+                <div className="clip-order-actions">
+                  <button
+                    type="button"
+                    className="clip-order-move"
+                    onClick={() =>
+                      setItems((currentItems) => moveItem(currentItems, index, index - 1))
+                    }
+                    disabled={index === 0}
+                    aria-label={moveUpLabel}
+                    title={moveUpLabel}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="clip-order-move"
+                    onClick={() =>
+                      setItems((currentItems) => moveItem(currentItems, index, index + 1))
+                    }
+                    disabled={index === items.length - 1}
+                    aria-label={moveDownLabel}
+                    title={moveDownLabel}
+                  >
+                    ↓
+                  </button>
                 </div>
               </li>
             ))}

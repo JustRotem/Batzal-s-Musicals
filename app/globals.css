@@ -521,6 +521,12 @@ textarea:focus-visible {
   width: 108px;
 }
 
+.musicals-grid .musical-card-artwork.is-square {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .musical-card-artwork .musical-artwork {
   border-radius: 18px;
   box-shadow:
@@ -2172,7 +2178,7 @@ textarea:focus-visible {
 
 .clip-order-item {
   display: grid;
-  grid-template-columns: 24px 36px minmax(0, 1fr);
+  grid-template-columns: 24px 36px minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
@@ -2234,6 +2240,32 @@ textarea:focus-visible {
 .clip-order-details span {
   color: var(--muted);
   font-size: 0.88rem;
+}
+
+.clip-order-actions {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.clip-order-move {
+  min-width: 36px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(15, 23, 42, 0.7);
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.clip-order-move:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .clip-order-toolbar {
@@ -5515,6 +5547,16 @@ html[dir="ltr"] input[type="email"]::placeholder {
   .search-result-artwork {
     max-width: 180px;
   }
+
+  .musicals-grid .musicals-grid-card {
+    align-items: center;
+  }
+
+  .musicals-grid .musical-card-artwork,
+  .musicals-grid .musical-card-body {
+    align-self: center;
+  }
+
 }
 
 @media (max-width: 860px) {
@@ -5612,6 +5654,19 @@ html[dir="ltr"] input[type="email"]::placeholder {
     width: 92px;
   }
 
+  .musicals-grid .musicals-grid-card.is-wide {
+    display: block;
+  }
+
+  .musicals-grid .musicals-grid-card.is-wide .musical-card-artwork {
+    width: min(100%, 180px);
+    margin: 0 auto 12px;
+  }
+
+  .musicals-grid .musical-card-artwork.is-wide {
+    width: 72px;
+  }
+
   .musical-card-title {
     font-size: 19px;
   }
@@ -5661,6 +5716,10 @@ html[dir="ltr"] input[type="email"]::placeholder {
     min-height: 44px;
     padding-inline: 44px 70px;
     width: 100%;
+  }
+
+  .clip-order-actions {
+    display: inline-flex;
   }
 
   .musical-clips-section {

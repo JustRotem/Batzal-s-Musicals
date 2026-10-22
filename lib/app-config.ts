@@ -1,7 +1,7 @@
 import type { AppLanguage } from "@/lib/i18n";
 
 export const APP_TITLE_HE =
-  process.env.NEXT_PUBLIC_APP_TITLE_HE?.trim() || "המחזות של בצלאל";
+  process.env.NEXT_PUBLIC_APP_TITLE_HE?.trim() || "מחזות זמר";
 
 export const APP_TITLE_EN =
   process.env.NEXT_PUBLIC_APP_TITLE_EN?.trim() || "Batzal's Musicals";

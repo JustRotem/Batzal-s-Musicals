@@ -106,7 +106,7 @@ export default function UserMenu({ user, language }: UserMenuProps) {
           </span>
         )}
 
-        <span className="profile-trigger-text">
+        <span className="profile-trigger-text" dir="auto">
           {user ? user.username : t.common.account}
         </span>
       </button>
