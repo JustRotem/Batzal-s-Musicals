@@ -4081,30 +4081,6 @@ img.user-avatar {
   display: block;
 }
 
-.turnstile-shell {
-  display: grid;
-  gap: 8px;
-  justify-items: center;
-  width: 100%;
-  margin-inline: auto;
-}
-
-.turnstile-widget-slot {
-  min-height: 66px;
-  width: 100%;
-  max-width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.turnstile-message {
-  margin: 0;
-  color: rgba(251, 191, 36, 0.95);
-  font-size: 13px;
-  line-height: 1.6;
-  text-align: center;
-}
-
 .auth-field {
   width: 100%;
 }

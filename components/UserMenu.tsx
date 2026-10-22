@@ -224,15 +224,6 @@ export default function UserMenu({ user, language }: UserMenuProps) {
               >
                 {t.header.login}
               </Link>
-
-              <Link
-                href="/auth/request-account"
-                className="profile-dropdown-link"
-                role="menuitem"
-                onClick={() => setOpen(false)}
-              >
-                {t.header.signup}
-              </Link>
             </>
           )}
         </div>

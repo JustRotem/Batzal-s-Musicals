@@ -4,14 +4,12 @@ import {
   GoogleAuthError,
   completeGoogleSignIn,
   getGoogleErrorRedirectUrl,
-  parseGoogleOAuthState,
   toGoogleAppUrl,
 } from "@/lib/google-auth";
+import { LANGUAGE_COOKIE_NAME } from "@/lib/i18n";
 
 export async function GET(request: NextRequest) {
-  const stateCookie = request.cookies.get(GOOGLE_OAUTH_STATE_COOKIE)?.value;
-  const expectedState = parseGoogleOAuthState(stateCookie);
-  const mode = expectedState?.mode ?? request.nextUrl.searchParams.get("mode");
+  const expectedState = request.cookies.get(GOOGLE_OAUTH_STATE_COOKIE)?.value ?? null;
   const googleError = request.nextUrl.searchParams.get("error");
   const state = request.nextUrl.searchParams.get("state");
   const code = request.nextUrl.searchParams.get("code");
@@ -30,9 +28,7 @@ export async function GET(request: NextRequest) {
 
   if (googleError === "access_denied") {
     return clearStateCookie(
-      NextResponse.redirect(
-        toGoogleAppUrl(getGoogleErrorRedirectUrl(mode, "google-cancelled")),
-      ),
+      NextResponse.redirect(toGoogleAppUrl(getGoogleErrorRedirectUrl("google-cancelled"))),
     );
   }
 
@@ -41,21 +37,20 @@ export async function GET(request: NextRequest) {
       code,
       expectedState,
       receivedState: state,
+      visitorLanguage: request.cookies.get(LANGUAGE_COOKIE_NAME)?.value ?? null,
     });
 
     return clearStateCookie(NextResponse.redirect(toGoogleAppUrl(result.redirectTo)));
   } catch (error) {
-    const errorCode =
-      error instanceof GoogleAuthError ? error.code : "google-token-failed";
+    const errorCode = error instanceof GoogleAuthError ? error.code : "google-token-failed";
 
     console.error("[auth][google] callback failed", {
       reason: error instanceof Error ? error.message : "unknown-error",
       code: errorCode,
-      mode: mode === "signup" ? "signup" : "login",
     });
 
     return clearStateCookie(
-      NextResponse.redirect(toGoogleAppUrl(getGoogleErrorRedirectUrl(mode, errorCode))),
+      NextResponse.redirect(toGoogleAppUrl(getGoogleErrorRedirectUrl(errorCode))),
     );
   }
 }

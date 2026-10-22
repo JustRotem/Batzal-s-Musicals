@@ -183,11 +183,6 @@ export default async function HomePage() {
                     <span className="home-quick-link-title">{t.home.quickLoginTitle}</span>
                     <span className="home-quick-link-text">{t.home.quickLoginText}</span>
                   </Link>
-
-                  <Link className="home-quick-link" href="/auth/request-account">
-                    <span className="home-quick-link-title">{t.home.quickSignupTitle}</span>
-                    <span className="home-quick-link-text">{t.home.quickSignupText}</span>
-                  </Link>
                 </>
               ) : (
                 <>

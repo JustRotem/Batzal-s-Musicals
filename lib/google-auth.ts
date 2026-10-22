@@ -2,14 +2,13 @@ import { randomBytes } from "crypto";
 import { db } from "@/lib/db";
 import { createSession, hashPassword } from "@/lib/auth";
 import { getAppUrl } from "@/lib/env";
+import { normalizeLanguage } from "@/lib/i18n";
 
 const GOOGLE_AUTH_BASE_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo";
 
 export const GOOGLE_OAUTH_STATE_COOKIE = "my_musicals_google_oauth_state";
-
-type GoogleAuthMode = "login" | "signup";
 
 type GoogleTokensResponse = {
   access_token?: string;
@@ -32,11 +31,6 @@ type GoogleUserInfo = {
   locale?: string;
 };
 
-type GoogleOAuthState = {
-  state: string;
-  mode: GoogleAuthMode;
-};
-
 export class GoogleAuthError extends Error {
   code:
     | "google-unavailable"
@@ -54,10 +48,6 @@ export class GoogleAuthError extends Error {
     this.name = "GoogleAuthError";
     this.code = code;
   }
-}
-
-function normalizeMode(value: string | null | undefined): GoogleAuthMode {
-  return value === "signup" ? "signup" : "login";
 }
 
 function normalizeNamePart(value?: string | null, fallback = "") {
@@ -83,10 +73,6 @@ export function isGoogleAuthEnabled() {
   );
 }
 
-export function getGoogleAuthMode(value: string | null | undefined) {
-  return normalizeMode(value);
-}
-
 export function getGoogleCallbackUrl() {
   return `${getGoogleAppUrl()}/auth/google/callback`;
 }
@@ -95,7 +81,7 @@ export function toGoogleAppUrl(pathname: string) {
   return new URL(pathname, getGoogleAppUrl()).toString();
 }
 
-export function createGoogleOAuthState(modeInput: string | null | undefined): GoogleOAuthState {
+export function createGoogleOAuthState() {
   if (!isGoogleAuthEnabled()) {
     throw new GoogleAuthError(
       "google-unavailable",
@@ -103,38 +89,10 @@ export function createGoogleOAuthState(modeInput: string | null | undefined): Go
     );
   }
 
-  return {
-    state: randomBytes(24).toString("hex"),
-    mode: normalizeMode(modeInput),
-  };
+  return randomBytes(24).toString("hex");
 }
 
-export function serializeGoogleOAuthState(payload: GoogleOAuthState) {
-  return JSON.stringify(payload);
-}
-
-export function parseGoogleOAuthState(value: string | undefined) {
-  if (!value) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(value) as Partial<GoogleOAuthState>;
-
-    if (!parsed.state || (parsed.mode !== "login" && parsed.mode !== "signup")) {
-      return null;
-    }
-
-    return {
-      state: parsed.state,
-      mode: parsed.mode,
-    } satisfies GoogleOAuthState;
-  } catch {
-    return null;
-  }
-}
-
-export function buildGoogleAuthorizationUrl(payload: GoogleOAuthState) {
+export function buildGoogleAuthorizationUrl(state: string) {
   if (!isGoogleAuthEnabled()) {
     throw new GoogleAuthError(
       "google-unavailable",
@@ -150,7 +108,7 @@ export function buildGoogleAuthorizationUrl(payload: GoogleOAuthState) {
     access_type: "online",
     include_granted_scopes: "true",
     prompt: "select_account",
-    state: payload.state,
+    state,
   });
 
   return `${GOOGLE_AUTH_BASE_URL}?${params.toString()}`;
@@ -259,22 +217,17 @@ function getGoogleNameParts(profile: GoogleUserInfo) {
   };
 }
 
-function getGoogleErrorRedirect(mode: GoogleAuthMode, error: GoogleAuthError["code"]) {
-  const basePath = mode === "signup" ? "/auth/request-account" : "/auth/login";
-  return `${basePath}?error=${error}`;
-}
-
 export async function completeGoogleSignIn({
   code,
   expectedState,
   receivedState,
+  visitorLanguage,
 }: {
   code: string | null;
-  expectedState: GoogleOAuthState | null;
+  expectedState: string | null;
   receivedState: string | null;
+  visitorLanguage: string | null;
 }) {
-  const mode = expectedState?.mode ?? "login";
-
   if (!isGoogleAuthEnabled()) {
     throw new GoogleAuthError(
       "google-unavailable",
@@ -282,7 +235,7 @@ export async function completeGoogleSignIn({
     );
   }
 
-  if (!expectedState || !receivedState || expectedState.state !== receivedState) {
+  if (!expectedState || !receivedState || expectedState !== receivedState) {
     throw new GoogleAuthError("google-state-invalid", "Google OAuth state validation failed");
   }
 
@@ -384,7 +337,7 @@ export async function completeGoogleSignIn({
       passwordHash,
       avatarUrl: profile.picture ?? null,
       requestMessage: null,
-      language: "he",
+      language: normalizeLanguage(visitorLanguage),
       status: "active",
       role: "user",
     },
@@ -401,9 +354,6 @@ export async function completeGoogleSignIn({
   };
 }
 
-export function getGoogleErrorRedirectUrl(
-  modeInput: string | null | undefined,
-  errorCode: GoogleAuthError["code"],
-) {
-  return getGoogleErrorRedirect(normalizeMode(modeInput), errorCode);
+export function getGoogleErrorRedirectUrl(errorCode: GoogleAuthError["code"]) {
+  return `/auth/login?error=${errorCode}`;
 }

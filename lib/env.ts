@@ -113,7 +113,7 @@ export function getClipUploadAuthSecret() {
     return explicitSecret;
   }
 
-  const fallbackSecret = readEnv("TURNSTILE_SECRET_KEY") || readEnv("GOOGLE_CLIENT_SECRET");
+  const fallbackSecret = readEnv("GOOGLE_CLIENT_SECRET");
 
   if (fallbackSecret) {
     return fallbackSecret;

@@ -18,9 +18,6 @@ export default function BlockedAccountPage() {
             <Link className="button-secondary" href="/auth/login">
               חזרה להתחברות
             </Link>
-            <Link className="button-primary" href="/auth/request-account">
-              שלח בקשה חדשה
-            </Link>
           </div>
         </section>
       </div>

@@ -11,7 +11,6 @@ import {
 } from "@/lib/permissions";
 import FormSubmitButton from "@/components/FormSubmitButton";
 import UserAvatarUploadField from "@/components/UserAvatarUploadField";
-import ChangePasswordForm from "@/components/ChangePasswordForm";
 import RequestEditorAccessModal from "@/components/RequestEditorAccessModal";
 import { getCurrentLanguage } from "@/lib/i18n-server";
 import { getRoleLabel as getLocalizedRoleLabel, getTranslations } from "@/lib/i18n";
@@ -567,21 +566,6 @@ export default async function ProfilePage(props: ProfilePageProps) {
                 </div>
 
                 <div className="profile-security-grid">
-                  <section className="profile-security-card">
-                    <div>
-                      <h3 className="profile-panel-title" style={{ marginBottom: 8 }}>
-                        {language === "he" ? "שינוי סיסמה" : "Change password"}
-                      </h3>
-                      <p className="profile-access-text" style={{ marginBottom: 0 }}>
-                        {language === "he"
-                          ? "כדי לעדכן סיסמה צריך לאשר את הסיסמה הנוכחית ולבחור סיסמה חדשה שעומדת בכללי האבטחה של המערכת."
-                          : "To update the password, confirm the current password and choose a new one that meets the system security rules."}
-                      </p>
-                    </div>
-
-                    <ChangePasswordForm language={language} />
-                  </section>
-
                   <section className="profile-security-card profile-security-placeholder">
                     <div>
                       <h3 className="profile-panel-title" style={{ marginBottom: 8 }}>

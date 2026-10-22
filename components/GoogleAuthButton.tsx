@@ -2,16 +2,15 @@ import Link from "next/link";
 import { getTranslations, type AppLanguage } from "@/lib/i18n";
 
 type GoogleAuthButtonProps = {
-  mode: "login" | "signup";
   language: AppLanguage;
 };
 
-export default function GoogleAuthButton({ mode, language }: GoogleAuthButtonProps) {
+export default function GoogleAuthButton({ language }: GoogleAuthButtonProps) {
   const t = getTranslations(language);
 
   return (
     <Link
-      href={`/auth/google/start?mode=${mode}`}
+      href="/auth/google/start"
       className="google-auth-button"
       prefetch={false}
     >

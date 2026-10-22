@@ -3,10 +3,26 @@ import { APP_TITLE_HE, APP_TITLE_EN } from "@/lib/app-config";
 export type AppLanguage = "he" | "en";
 
 export const LANGUAGE_COOKIE_NAME = "my_musicals_language";
-export const LANGUAGE_SESSION_COOKIE_NAME = "my_musicals_language_session";
+export const LANGUAGE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 
 export function normalizeLanguage(value: string | null | undefined): AppLanguage {
   return value === "en" ? "en" : "he";
+}
+
+// The saved account language wins; the cookie is the choice of a signed-out visitor.
+export function resolveLanguage(
+  accountLanguage: string | null | undefined,
+  cookieLanguage: string | null | undefined,
+): AppLanguage {
+  if (accountLanguage === "he" || accountLanguage === "en") {
+    return accountLanguage;
+  }
+
+  if (cookieLanguage === "he" || cookieLanguage === "en") {
+    return cookieLanguage;
+  }
+
+  return normalizeLanguage(null);
 }
 
 export function getDirection(language: AppLanguage): "rtl" | "ltr" {
@@ -84,8 +100,9 @@ const translations = {
       passwordInvalid: "הסיסמה לא תקינה.",
       login: {
         title: "כניסה לחשבון",
-        description:
-          "התחבר עם האימייל והסיסמה שלך כדי להיכנס לחשבון. אם שכחת פרטים, אפשר גם להתחיל מתהליך שחזור מסודר.",
+        description: "הכניסה היא עם חשבון Google בלבד.",
+        googleOnlyNote:
+          "אין צורך בהרשמה נפרדת: הכניסה הראשונה עם Google יוצרת את החשבון שלך, והשפה שתבחר נשמרת בו.",
         submit: "התחבר",
         pending: "מתחבר...",
         noAccountTitle: "אין לך עדיין חשבון?",
@@ -678,8 +695,9 @@ const translations = {
       passwordInvalid: "The password is not valid.",
       login: {
         title: "Log In",
-        description:
-          "Sign in with your email and password. If you forgot your details, you can also start a recovery flow from here.",
+        description: "Sign in is with your Google account only.",
+        googleOnlyNote:
+          "There is no separate sign-up: your first Google sign-in creates your account, and the language you pick is saved with it.",
         submit: "Log In",
         pending: "Logging in...",
         noAccountTitle: "Don't have an account yet?",

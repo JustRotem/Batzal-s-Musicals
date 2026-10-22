@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { hashPassword, requirePermission, requireUser, rotateSession, verifyPassword } from "@/lib/auth";
+import { requirePermission, requireUser } from "@/lib/auth";
 import {
   createPhoneVerificationCode,
   isValidPhone,
@@ -13,8 +13,6 @@ import {
 } from "@/lib/phone-verification";
 import { ImageUploadError, isFileEntry } from "@/lib/image-upload";
 import { getTranslations, normalizeLanguage } from "@/lib/i18n";
-import type { ChangePasswordFormState } from "@/lib/form-states";
-import { isStrongPassword } from "@/lib/password-policy";
 import { updateUserAvatar } from "@/lib/profile-avatar";
 import { PERMISSIONS } from "@/lib/permissions";
 import { notifyAdminsAboutEditorRequest } from "@/lib/editor-request-notifications";
@@ -135,98 +133,6 @@ export async function updateAvatarAction(formData: FormData) {
     redirectProfileWithError("missing-avatar", section);
   }
   redirectProfileWithSuccess("avatar-updated", section);
-}
-
-export async function changePasswordAction(
-  _previousState: ChangePasswordFormState,
-  formData: FormData,
-): Promise<ChangePasswordFormState> {
-  const user = await requirePermission(PERMISSIONS.profileEdit);
-  const language = normalizeLanguage(normalize(formData.get("language")));
-  const t = getTranslations(language);
-  const currentPassword = normalize(formData.get("currentPassword"));
-  const newPassword = normalize(formData.get("newPassword"));
-  const confirmPassword = normalize(formData.get("confirmPassword"));
-
-  const fieldErrors: ChangePasswordFormState["fieldErrors"] = {};
-
-  if (!currentPassword) {
-    fieldErrors.currentPassword =
-      language === "he" ? "צריך להזין את הסיסמה הנוכחית." : "Please enter your current password.";
-  }
-
-  if (!newPassword) {
-    fieldErrors.newPassword = t.auth.resetPassword.missingPassword;
-  } else if (!isStrongPassword(newPassword)) {
-    fieldErrors.newPassword = t.auth.resetPassword.weakPassword;
-  }
-
-  if (!confirmPassword) {
-    fieldErrors.confirmPassword = t.auth.resetPassword.missingConfirmPassword;
-  } else if (newPassword && confirmPassword !== newPassword) {
-    fieldErrors.confirmPassword = t.auth.resetPassword.passwordMismatch;
-  }
-
-  if (Object.keys(fieldErrors).length > 0) {
-    return {
-      status: "error",
-      fieldErrors,
-    };
-  }
-
-  const dbUser = await db.user.findUnique({
-    where: { id: user.id },
-    select: {
-      id: true,
-      passwordHash: true,
-    },
-  });
-
-  if (!dbUser || !verifyPassword(currentPassword, dbUser.passwordHash)) {
-    return {
-      status: "error",
-      fieldErrors: {
-        currentPassword:
-          language === "he"
-            ? "הסיסמה הנוכחית שהוזנה אינה נכונה."
-            : "The current password you entered is incorrect.",
-      },
-    };
-  }
-
-  if (verifyPassword(newPassword, dbUser.passwordHash)) {
-    return {
-      status: "error",
-      fieldErrors: {
-        newPassword:
-          language === "he"
-            ? "כדאי לבחור סיסמה חדשה ושונה מהסיסמה הנוכחית."
-            : "Please choose a new password that is different from the current one.",
-      },
-    };
-  }
-
-  await db.user.update({
-    where: { id: dbUser.id },
-    data: {
-      passwordHash: hashPassword(newPassword),
-      passwordResetTokenHash: null,
-      passwordResetExpires: null,
-    },
-  });
-
-  await rotateSession(dbUser.id);
-  revalidatePath("/", "layout");
-  revalidatePath("/profile");
-
-  return {
-    status: "success",
-    fieldErrors: {},
-    successMessage:
-      language === "he"
-        ? "הסיסמה עודכנה בהצלחה. החיבור שלך נשמר בצורה מאובטחת."
-        : "Your password was updated successfully. Your session has been kept secure.",
-  };
 }
 
 export async function updatePhoneAction(formData: FormData) {

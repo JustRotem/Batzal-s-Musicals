@@ -1,4 +1,4 @@
-import { randomBytes, scryptSync, timingSafeEqual, createHash } from "crypto";
+import { randomBytes, scryptSync, createHash } from "crypto";
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -10,7 +10,11 @@ import {
   MUSICAL_MANAGEMENT_PERMISSIONS,
   syncPermissionDefinitions,
 } from "@/lib/permissions";
-import { LANGUAGE_SESSION_COOKIE_NAME, normalizeLanguage } from "@/lib/i18n";
+import {
+  LANGUAGE_COOKIE_MAX_AGE_SECONDS,
+  LANGUAGE_COOKIE_NAME,
+  normalizeLanguage,
+} from "@/lib/i18n";
 import type { PermissionName } from "@prisma/client";
 
 export const SESSION_COOKIE_NAME = "my_musicals_session";
@@ -49,36 +53,12 @@ function clearSessionCookies(cookieStore: Awaited<ReturnType<typeof cookies>>) {
     expires: new Date(0),
   });
 
-  cookieStore.set(LANGUAGE_SESSION_COOKIE_NAME, "", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    expires: new Date(0),
-  });
 }
 
 export function hashPassword(password: string): string {
   const salt = randomBytes(PASSWORD_SALT_LENGTH).toString("hex");
   const derivedKey = scryptSync(password, salt, 64).toString("hex");
   return `${salt}:${derivedKey}`;
-}
-
-export function verifyPassword(password: string, storedHash: string): boolean {
-  const [salt, expectedKey] = storedHash.split(":");
-
-  if (!salt || !expectedKey) {
-    return false;
-  }
-
-  const derivedKey = scryptSync(password, salt, 64);
-  const expectedBuffer = Buffer.from(expectedKey, "hex");
-
-  if (derivedKey.length !== expectedBuffer.length) {
-    return false;
-  }
-
-  return timingSafeEqual(derivedKey, expectedBuffer);
 }
 
 function buildSafeUser(user: {
@@ -145,25 +125,14 @@ export async function createSession(userId: string, language?: string | null) {
   });
 
   if (typeof language === "string" && language.trim()) {
-    const safeLanguage = normalizeLanguage(language);
-    cookieStore.set(LANGUAGE_SESSION_COOKIE_NAME, safeLanguage, {
+    cookieStore.set(LANGUAGE_COOKIE_NAME, normalizeLanguage(language), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      expires: expiresAt,
+      maxAge: LANGUAGE_COOKIE_MAX_AGE_SECONDS,
     });
   }
-}
-
-export async function rotateSession(userId: string) {
-  await db.session.deleteMany({
-    where: {
-      userId,
-    },
-  });
-
-  await createSession(userId);
 }
 
 export async function clearSession() {

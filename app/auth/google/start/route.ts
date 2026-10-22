@@ -1,22 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import {
   GOOGLE_OAUTH_STATE_COOKIE,
   buildGoogleAuthorizationUrl,
   createGoogleOAuthState,
   getGoogleErrorRedirectUrl,
-  serializeGoogleOAuthState,
   toGoogleAppUrl,
 } from "@/lib/google-auth";
 
-export async function GET(request: NextRequest) {
-  const mode = request.nextUrl.searchParams.get("mode");
-
+export async function GET() {
   try {
-    const oauthState = createGoogleOAuthState(mode);
-    const redirectUrl = buildGoogleAuthorizationUrl(oauthState);
-    const response = NextResponse.redirect(redirectUrl);
+    const state = createGoogleOAuthState();
+    const response = NextResponse.redirect(buildGoogleAuthorizationUrl(state));
 
-    response.cookies.set(GOOGLE_OAUTH_STATE_COOKIE, serializeGoogleOAuthState(oauthState), {
+    response.cookies.set(GOOGLE_OAUTH_STATE_COOKIE, state, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
@@ -26,8 +22,6 @@ export async function GET(request: NextRequest) {
 
     return response;
   } catch {
-    return NextResponse.redirect(
-      toGoogleAppUrl(getGoogleErrorRedirectUrl(mode, "google-unavailable")),
-    );
+    return NextResponse.redirect(toGoogleAppUrl(getGoogleErrorRedirectUrl("google-unavailable")));
   }
 }
