@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getAppTitle } from "@/lib/app-config";
 import { getCurrentUser } from "@/lib/auth";
+import AppsMenu from "@/components/AppsMenu";
+import BatzalLogo from "@/components/BatzalLogo";
 import HeaderSearch from "@/components/HeaderSearch";
 import UserMenu from "@/components/UserMenu";
 import { getCommentReportSummary } from "@/lib/comment-report-summary";
@@ -39,20 +41,21 @@ export default async function SiteHeader({
       : "/admin/permissions";
 
   return (
-    <header className="site-header">
+    <header className="site-header bz-bar" data-theme="dark">
       <div className="site-header-inner">
         <div className="site-header-section site-header-brand">
-          <Link href="/" className="site-brand" aria-label={t.header.homeAria}>
-            <span className="site-brand-icon" aria-hidden="true">
-              <span className="site-brand-monogram">BM</span>
-            </span>
-            <span className="site-brand-text">{getAppTitle(language)}</span>
+          <Link href="/" className="bz-brand" aria-label={t.header.homeAria}>
+            <BatzalLogo />
+            <span>Batzal</span>
           </Link>
+          <span className="bz-sep" aria-hidden="true" />
+          <span className="bz-app">{getAppTitle(language)}</span>
         </div>
 
         <HeaderSearch language={language} />
 
         <div className="site-header-section site-header-actions">
+          <AppsMenu language={language} />
           <UserMenu
             user={
               user
