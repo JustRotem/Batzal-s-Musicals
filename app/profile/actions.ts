@@ -15,6 +15,7 @@ import { ImageUploadError, isFileEntry } from "@/lib/image-upload";
 import { getTranslations, normalizeLanguage } from "@/lib/i18n";
 import { updateUserAvatar } from "@/lib/profile-avatar";
 import { PERMISSIONS } from "@/lib/permissions";
+import { validateUsername } from "@/lib/username";
 import { notifyAdminsAboutEditorRequest } from "@/lib/editor-request-notifications";
 
 type ProfileSection = "profile" | "permissions" | "security";
@@ -133,6 +134,39 @@ export async function updateAvatarAction(formData: FormData) {
     redirectProfileWithError("missing-avatar", section);
   }
   redirectProfileWithSuccess("avatar-updated", section);
+}
+
+export async function updateUsernameAction(formData: FormData) {
+  const user = await requirePermission(PERMISSIONS.profileEdit);
+  const section = normalizeSection(normalize(formData.get("section")), "profile");
+  const result = validateUsername(normalize(formData.get("username")));
+
+  if (!result.ok) {
+    redirectProfileWithError(result.error, section);
+  }
+
+  if (result.value !== user.username) {
+    const taken = await db.user.findFirst({
+      where: {
+        id: { not: user.id },
+        username: { equals: result.value, mode: "insensitive" },
+      },
+      select: { id: true },
+    });
+
+    if (taken) {
+      redirectProfileWithError("username-exists", section);
+    }
+
+    await db.user.update({
+      where: { id: user.id },
+      data: { username: result.value },
+    });
+
+    revalidatePath("/", "layout");
+  }
+
+  redirectProfileWithSuccess("username-updated", section);
 }
 
 export async function updatePhoneAction(formData: FormData) {

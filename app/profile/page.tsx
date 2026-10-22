@@ -4,6 +4,7 @@ import {
   requestEditorAccessAction,
   sendPhoneVerificationCodeAction,
   updatePhoneAction,
+  updateUsernameAction,
   verifyPhoneCodeAction,
 } from "@/app/profile/actions";
 import {
@@ -56,6 +57,7 @@ const SUCCESS_MESSAGES: Record<"he" | "en", Record<string, string>> = {
     "phone-code-sent": "קוד אימות נשלח למסלול הפיתוח של הטלפון.",
     "phone-verified": "מספר הטלפון אומת בהצלחה.",
     "avatar-updated": "תמונת החשבון עודכנה בהצלחה.",
+    "username-updated": "שם המשתמש עודכן.",
   },
   en: {
     "editor-request-sent": "Your editor-access request was sent for admin review.",
@@ -65,12 +67,17 @@ const SUCCESS_MESSAGES: Record<"he" | "en", Record<string, string>> = {
     "phone-code-sent": "A verification code was sent through the current development phone flow.",
     "phone-verified": "Your phone number was verified successfully.",
     "avatar-updated": "Your profile image was updated successfully.",
+    "username-updated": "Your username was updated.",
   },
 };
 
 const ERROR_MESSAGES: Record<"he" | "en", Record<string, string>> = {
   he: {
     "invalid-phone": "יש להזין מספר טלפון תקין בפורמט מקומי או בינלאומי.",
+    "username-too-short": "שם המשתמש צריך להכיל לפחות 3 תווים.",
+    "username-too-long": "שם המשתמש יכול להכיל עד 30 תווים.",
+    "username-invalid": "שם המשתמש יכול להכיל אותיות, ספרות, קו תחתון ורווחים בלבד.",
+    "username-exists": "שם המשתמש הזה כבר תפוס. אפשר לנסות שם אחר.",
     "missing-phone": "צריך לשמור מספר טלפון לפני שאפשר לשלוח קוד אימות.",
     "missing-phone-code": "צריך להזין את קוד האימות שנשלח.",
     "phone-code-missing": "אין כרגע קוד אימות פעיל. אפשר לשלוח קוד חדש.",
@@ -83,6 +90,10 @@ const ERROR_MESSAGES: Record<"he" | "en", Record<string, string>> = {
   },
   en: {
     "invalid-phone": "Please enter a valid phone number in local or international format.",
+    "username-too-short": "The username must be at least 3 characters.",
+    "username-too-long": "The username can be up to 30 characters.",
+    "username-invalid": "The username can contain letters, digits, underscores and spaces only.",
+    "username-exists": "That username is already taken. Try another one.",
     "missing-phone": "Please save a phone number before sending a verification code.",
     "missing-phone-code": "Please enter the verification code that was sent.",
     "phone-code-missing": "There is no active verification code right now. You can send a new one.",
@@ -483,8 +494,28 @@ export default async function ProfilePage(props: ProfilePageProps) {
                     </span>
                   </div>
                   <div className="profile-info-card">
-                    <span className="profile-info-label">{t.profile.username}</span>
-                    <span className="profile-info-value">{user.username}</span>
+                    <form action={updateUsernameAction} className="profile-username-form">
+                      <input type="hidden" name="section" value="profile" />
+                      <label className="profile-info-label" htmlFor="profile-username">
+                        {t.profile.username}
+                      </label>
+                      <div className="profile-username-row">
+                        <input
+                          id="profile-username"
+                          className="input"
+                          name="username"
+                          defaultValue={user.username}
+                          minLength={3}
+                          maxLength={30}
+                          autoComplete="nickname"
+                          required
+                        />
+                        <FormSubmitButton
+                          idleLabel={language === "he" ? "שמור" : "Save"}
+                          pendingLabel={language === "he" ? "שומר..." : "Saving..."}
+                        />
+                      </div>
+                    </form>
                   </div>
                   <div className="profile-info-card profile-info-card-email">
                     <span className="profile-info-label">{t.profile.email}</span>
