@@ -3,11 +3,13 @@ import { getCurrentUser } from "@/lib/auth";
 import { isGoogleAuthEnabled } from "@/lib/google-auth";
 import { getCurrentLanguage } from "@/lib/i18n-server";
 import { getTranslations } from "@/lib/i18n";
+import { sanitizeNextPath } from "@/lib/login-next";
 import GoogleAuthButton from "@/components/GoogleAuthButton";
 
 type LoginPageProps = {
   searchParams?: Promise<{
     error?: string;
+    next?: string;
   }>;
 };
 
@@ -15,12 +17,13 @@ export default async function LoginPage(props: LoginPageProps) {
   const user = await getCurrentUser();
   const language = await getCurrentLanguage();
   const t = getTranslations(language);
+  const searchParams = await props.searchParams;
+  const next = sanitizeNextPath(searchParams?.next);
 
   if (user) {
-    redirect("/");
+    redirect(next ?? "/");
   }
 
-  const searchParams = await props.searchParams;
   const errorMessages = t.auth.login.errors as Record<string, string>;
   const errorCode = searchParams?.error;
   const errorMessage = errorCode ? errorMessages[errorCode] ?? null : null;
@@ -39,7 +42,7 @@ export default async function LoginPage(props: LoginPageProps) {
           <div className="auth-container">
             <div className="form-grid auth-form auth-form-compact auth-form-login">
               {googleAuthEnabled ? (
-                <GoogleAuthButton language={language} />
+                <GoogleAuthButton language={language} next={next} />
               ) : (
                 <p className="form-message error" role="alert">
                   {errorMessages["google-unavailable"]}
