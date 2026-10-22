@@ -1,11 +1,10 @@
+// People are shown by their username everywhere. The first and last name columns are no longer displayed.
 export function formatUserDisplayName(firstName: string, lastName: string, username?: string) {
-  const safeFirstName = firstName.trim();
-  const safeLastName = lastName.trim();
+  const safeUsername = username?.trim();
 
-  if (safeFirstName && safeLastName.toLowerCase() === "user") {
-    return safeFirstName;
+  if (safeUsername) {
+    return safeUsername;
   }
 
-  const fullName = `${safeFirstName} ${safeLastName}`.trim();
-  return fullName || username?.trim() || "";
+  return `${firstName} ${lastName}`.trim();
 }

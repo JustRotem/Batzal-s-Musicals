@@ -51,7 +51,6 @@ export async function GET(request: NextRequest) {
     select: { googleSubject: true },
   });
 
-  const name = `${user.firstName} ${user.lastName}`.trim() || user.username;
   const picture = user.avatarUrl ? new URL(user.avatarUrl, appUrl).toString() : null;
 
   const token = signSsoToken(
@@ -59,7 +58,7 @@ export async function GET(request: NextRequest) {
       sub: user.id,
       gsub: record?.googleSubject ?? null,
       email: user.email,
-      name,
+      name: user.username,
       username: user.username,
       picture,
       role: user.role,

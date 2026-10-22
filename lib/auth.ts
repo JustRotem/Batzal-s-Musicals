@@ -3,6 +3,7 @@ import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { getAppMode } from "@/lib/app-mode";
 import { 
   hasPermission,
   hasAnyPermission,
@@ -17,7 +18,9 @@ import {
 } from "@/lib/i18n";
 import type { PermissionName } from "@prisma/client";
 
-export const SESSION_COOKIE_NAME = "my_musicals_session";
+// The two sites keep separate sessions, so they must not share a cookie name (they share a host while developing locally).
+export const SESSION_COOKIE_NAME =
+  getAppMode() === "account" ? "batzal_account_session" : "my_musicals_session";
 const SESSION_DURATION_DAYS = 30;
 const PASSWORD_SALT_LENGTH = 16;
 const SESSION_TOKEN_BYTES = 32;

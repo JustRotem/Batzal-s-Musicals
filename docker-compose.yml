@@ -38,11 +38,53 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      SSO_PRIVATE_KEY: ${SSO_PRIVATE_KEY:-}
+      ACCOUNT_URL: ${ACCOUNT_URL:-http://localhost:3001}
+      SSO_PUBLIC_KEY: ${SSO_PUBLIC_KEY:-}
       SSO_ALLOWED_ORIGINS: ${SSO_ALLOWED_ORIGINS:-}
       PORT: 3000
     ports:
       - "3000:3000"
+    volumes:
+      - /var/www/musicals/public/uploads:/app/public/uploads
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then((res)=>process.exit(res.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  account:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: batzals-account-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/musicals?schema=public}
+      APP_URL: ${ACCOUNT_APP_URL:-http://localhost:3001}
+      NEXT_PUBLIC_APP_URL: ${ACCOUNT_APP_URL:-http://localhost:3001}
+      CLIP_UPLOAD_BASE_URL: ${CLIP_UPLOAD_BASE_URL:-http://localhost:3000}
+      CLIP_UPLOAD_AUTH_SECRET: ${CLIP_UPLOAD_AUTH_SECRET:-}
+      FROM_EMAIL_NAME: ${FROM_EMAIL_NAME:-Batzal's Musicals}
+      FROM_EMAIL: ${FROM_EMAIL:-no-reply@batzal.net}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      SSO_PRIVATE_KEY: ${SSO_PRIVATE_KEY:-}
+      SSO_ALLOWED_ORIGINS: ${SSO_ALLOWED_ORIGINS:-}
+      PORT: 3000
+      APP_MODE: account
+    ports:
+      - "3001:3000"
     volumes:
       - /var/www/musicals/public/uploads:/app/public/uploads
     healthcheck:

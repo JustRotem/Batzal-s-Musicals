@@ -4,7 +4,9 @@ import { before, describe, it } from "node:test";
 import { sanitizeNextPath } from "../lib/login-next";
 import {
   SSO_TOKEN_TTL_SECONDS,
+  buildSsoCallbackUrl,
   getSsoPublicKeyPem,
+  SSO_ISSUER,
   parseSsoRequest,
   signSsoToken,
   verifySsoToken,
@@ -105,5 +107,22 @@ describe("post-login redirect target", () => {
     assert.equal(sanitizeNextPath("/\\evil.example"), null);
     assert.equal(sanitizeNextPath("/ok\r\nSet-Cookie: x=1"), null);
     assert.equal(sanitizeNextPath(null), null);
+  });
+});
+
+describe("account site as identity provider", () => {
+  it("issues tokens as the account site", () => {
+    assert.equal(SSO_ISSUER, "account.batzal.net");
+  });
+
+  it("allows the musicals site and sends it to its own callback route", () => {
+    delete process.env.SSO_ALLOWED_ORIGINS;
+    process.env.MUSICALS_URL = "https://musicals.batzal.net";
+    assert.deepEqual(parseSsoRequest("https://musicals.batzal.net", STATE), {
+      origin: "https://musicals.batzal.net",
+      state: STATE,
+    });
+    assert.ok(buildSsoCallbackUrl("https://musicals.batzal.net", "t").startsWith("https://musicals.batzal.net/auth/account/callback?token="));
+    assert.ok(buildSsoCallbackUrl("https://qr.batzal.net", "t").startsWith("https://qr.batzal.net/api/sso/callback?token="));
   });
 });

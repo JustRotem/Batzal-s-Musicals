@@ -1,17 +1,13 @@
 import Link from "next/link";
+import { getAccountUrl, isAccountMode } from "@/lib/app-mode";
 import { getAppTitle } from "@/lib/app-config";
 import { getCurrentUser } from "@/lib/auth";
 import AppsMenu from "@/components/AppsMenu";
+import BatzalAccountMenu from "@/components/BatzalAccountMenu";
 import BatzalLogo from "@/components/BatzalLogo";
 import HeaderSearch from "@/components/HeaderSearch";
-import UserMenu from "@/components/UserMenu";
 import { getCommentReportSummary } from "@/lib/comment-report-summary";
-import {
-  canAccessAdminArea,
-  canRequestEditorAccess,
-  getPermissionFlags,
-  PERMISSIONS,
-} from "@/lib/permissions";
+import { canRequestEditorAccess, getPermissionFlags, PERMISSIONS } from "@/lib/permissions";
 import { type AppLanguage, getTranslations } from "@/lib/i18n";
 
 export default async function SiteHeader({
@@ -21,24 +17,37 @@ export default async function SiteHeader({
 }) {
   const user = await getCurrentUser();
   const t = getTranslations(language);
-  const permissionFlags = await getPermissionFlags(user, [
-    PERMISSIONS.userView,
-    PERMISSIONS.userManage,
-    PERMISSIONS.roleManage,
-    PERMISSIONS.editorRequestReview,
-  ] as const);
-  const canAccessAnyAdminArea = await canAccessAdminArea(user);
-  const canAccessCommentReports =
-    permissionFlags.user_view || permissionFlags.user_manage;
-  const commentReportSummary = canAccessCommentReports
-    ? await getCommentReportSummary()
-    : null;
-  const adminHref =
-    permissionFlags.user_view ||
-    permissionFlags.user_manage ||
-    permissionFlags.editor_request_review
-      ? "/admin"
-      : "/admin/permissions";
+  const accountSite = isAccountMode();
+  const accountUrl = getAccountUrl();
+
+  // Entries that exist only on the musicals site.
+  const extras: Array<{ href: string; label: string; badge?: number }> = [];
+
+  if (user && !accountSite) {
+    const flags = await getPermissionFlags(user, [PERMISSIONS.userView, PERMISSIONS.userManage] as const);
+
+    if (flags.user_view || flags.user_manage) {
+      const summary = await getCommentReportSummary();
+
+      extras.push({
+        href: "/admin/comments",
+        label: t.admin.commentReports,
+        badge: summary?.open ?? 0,
+      });
+    }
+
+    if (canRequestEditorAccess(user)) {
+      extras.push({
+        href: `${accountUrl}/profile#account-access-summary`,
+        label: t.header.requestEditorAccess,
+      });
+    } else if (user.role === "user" && user.status === "pending") {
+      extras.push({
+        href: `${accountUrl}/profile#account-access-summary`,
+        label: t.header.editorRequestPending,
+      });
+    }
+  }
 
   return (
     <header className="site-header bz-bar" data-theme="dark">
@@ -52,11 +61,15 @@ export default async function SiteHeader({
           <span className="bz-app">{getAppTitle(language)}</span>
         </div>
 
-        <HeaderSearch language={language} />
+        {accountSite ? (
+          <div className="site-header-section site-header-search" />
+        ) : (
+          <HeaderSearch language={language} />
+        )}
 
         <div className="site-header-section site-header-actions">
           <AppsMenu language={language} />
-          <UserMenu
+          <BatzalAccountMenu
             user={
               user
                 ? {
@@ -64,18 +77,14 @@ export default async function SiteHeader({
                     email: user.email,
                     avatarUrl: user.avatarUrl,
                     avatarVersion: user.avatarVersion,
-                    status: user.status,
                     role: user.role,
-                    canAccessAdminArea: canAccessAnyAdminArea,
-                    canAccessCommentReports,
-                    openCommentReportsCount: commentReportSummary?.open ?? 0,
-                    canRequestEditorAccess: canRequestEditorAccess(user),
-                    adminHref,
-                    language: user.language,
                   }
                 : null
             }
             language={language}
+            accountUrl={accountUrl}
+            signInHref={accountSite ? "/auth/login" : "/auth/account/start"}
+            extras={extras}
           />
         </div>
       </div>

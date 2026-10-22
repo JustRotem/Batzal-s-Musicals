@@ -212,6 +212,28 @@ export function getPermissionDefinition(
   return getAvailablePermissions(language).find((item) => item.name === permission);
 }
 
+// Permissions are shown grouped by the site they apply to.
+export type PermissionSite = "musicals" | "account";
+
+export const PERMISSION_SITES: readonly PermissionSite[] = ["musicals", "account"];
+
+export function getPermissionSite(category: PermissionCategory): PermissionSite {
+  return category === "musicals" || category === "clips" ? "musicals" : "account";
+}
+
+export function getPermissionSiteLabel(site: PermissionSite, language: AppLanguage = "he") {
+  if (site === "musicals") {
+    return language === "he" ? "מחזות זמר" : "Musicals";
+  }
+
+  return language === "he" ? "החשבון" : "Account";
+}
+
+// "Site · category", for example "Musicals · Clips".
+export function getPermissionGroupLabel(category: PermissionCategory, language: AppLanguage = "he") {
+  return `${getPermissionSiteLabel(getPermissionSite(category), language)} · ${getPermissionCategoryLabel(category, language)}`;
+}
+
 export function getPermissionCategoryLabel(
   category: PermissionCategory,
   language: AppLanguage = "he",

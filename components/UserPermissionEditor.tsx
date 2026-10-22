@@ -7,6 +7,7 @@ import {
   type PermissionCategory,
   PERMISSIONS,
   getPermissionCategoryLabel,
+  getPermissionGroupLabel,
 } from "@/lib/permissions";
 import { getTranslations, type AppLanguage } from "@/lib/i18n";
 
@@ -45,7 +46,7 @@ function groupPermissionNames(
 
   return Array.from(groups.entries()).map(([category, permissions]) => ({
     category,
-    label: getPermissionCategoryLabel(category, language),
+    label: getPermissionGroupLabel(category, language),
     permissions,
   }));
 }
@@ -64,7 +65,7 @@ function groupEditablePermissions(
 
   return Array.from(groups.entries()).map(([category, permissions]) => ({
     category,
-    label: getPermissionCategoryLabel(category, language),
+    label: getPermissionGroupLabel(category, language),
     permissions,
   }));
 }

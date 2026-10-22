@@ -4,14 +4,19 @@ import { getTranslations, type AppLanguage } from "@/lib/i18n";
 type GoogleAuthButtonProps = {
   language: AppLanguage;
   next?: string | null;
+  // Where the button leads; defaults to Google sign-in on this site.
+  href?: string;
 };
 
-export default function GoogleAuthButton({ language, next = null }: GoogleAuthButtonProps) {
+export default function GoogleAuthButton({ language, next = null, href }: GoogleAuthButtonProps) {
   const t = getTranslations(language);
 
   return (
     <Link
-      href={next ? `/auth/google/start?next=${encodeURIComponent(next)}` : "/auth/google/start"}
+      href={
+        href ??
+        (next ? `/auth/google/start?next=${encodeURIComponent(next)}` : "/auth/google/start")
+      }
       className="google-auth-button"
       prefetch={false}
     >

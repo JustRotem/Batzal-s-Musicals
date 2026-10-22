@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { isAccountMode } from "@/lib/app-mode";
 import { getCurrentUser } from "@/lib/auth";
 import { isGoogleAuthEnabled } from "@/lib/google-auth";
 import { getCurrentLanguage } from "@/lib/i18n-server";
@@ -27,7 +28,18 @@ export default async function LoginPage(props: LoginPageProps) {
   const errorMessages = t.auth.login.errors as Record<string, string>;
   const errorCode = searchParams?.error;
   const errorMessage = errorCode ? errorMessages[errorCode] ?? null : null;
-  const googleAuthEnabled = isGoogleAuthEnabled();
+  const accountSite = isAccountMode();
+
+  // On the musicals site signing in happens at the account site: go straight there unless something went wrong.
+  const accountStartHref = next
+    ? `/auth/account/start?next=${encodeURIComponent(next)}`
+    : "/auth/account/start";
+
+  if (!accountSite && !errorCode) {
+    redirect(accountStartHref);
+  }
+
+  const googleAuthEnabled = accountSite ? isGoogleAuthEnabled() : true;
 
   return (
     <main className="page-shell">
@@ -42,7 +54,11 @@ export default async function LoginPage(props: LoginPageProps) {
           <div className="auth-container">
             <div className="form-grid auth-form auth-form-compact auth-form-login">
               {googleAuthEnabled ? (
-                <GoogleAuthButton language={language} next={next} />
+                <GoogleAuthButton
+                  language={language}
+                  next={next}
+                  href={accountSite ? undefined : accountStartHref}
+                />
               ) : (
                 <p className="form-message error" role="alert">
                   {errorMessages["google-unavailable"]}

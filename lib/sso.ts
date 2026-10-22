@@ -1,14 +1,19 @@
+import { getMusicalsUrl } from "@/lib/app-mode";
 import { createPrivateKey, createPublicKey, randomBytes, sign, verify } from "crypto";
 
-// Single sign-on: this app is the identity provider for the other Batzal sites.
+// Single sign-on: the account site is the identity provider for every Batzal site (the musicals site included).
 // A site sends the visitor here; we answer with a short-lived, signed token that the site verifies
 // with our public key. See docs/SSO.md for the full protocol.
 
-export const SSO_ISSUER = "musicals.batzal.net";
+export const SSO_ISSUER = "account.batzal.net";
 export const SSO_TOKEN_TTL_SECONDS = 60;
 export const SSO_CALLBACK_PATH = "/api/sso/callback";
 
-const DEFAULT_ALLOWED_ORIGINS = ["https://qr.batzal.net", "https://admin.batzal.net"];
+const DEFAULT_ALLOWED_ORIGINS = [
+  "https://musicals.batzal.net",
+  "https://qr.batzal.net",
+  "https://admin.batzal.net",
+];
 const STATE_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
 const TOKEN_VERSION = "v1";
 
@@ -91,6 +96,25 @@ function loadPrivateKey() {
 
 export function isSsoEnabled() {
   return loadPrivateKey() !== null;
+}
+
+// The public key a consuming site pins in SSO_PUBLIC_KEY (PEM, or base64 of the PEM).
+export function readConfiguredPublicKeyPem(): string | null {
+  const raw = process.env.SSO_PUBLIC_KEY?.trim();
+
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const pem = raw.includes("BEGIN")
+      ? raw.replace(/\\n/g, "\n")
+      : Buffer.from(raw, "base64").toString("utf8");
+
+    return createPublicKey(pem).asymmetricKeyType === "ed25519" ? pem : null;
+  } catch {
+    return null;
+  }
 }
 
 export function getSsoPublicKeyPem(): string | null {
@@ -177,8 +201,15 @@ export function verifySsoToken(
   }
 }
 
+// The musicals site is a full Next.js app with its own callback route; the small sites use /api/sso/callback.
+const MUSICALS_CALLBACK_PATH = "/auth/account/callback";
+
+export function getCallbackPath(origin: string) {
+  return origin === new URL(getMusicalsUrl()).origin ? MUSICALS_CALLBACK_PATH : SSO_CALLBACK_PATH;
+}
+
 export function buildSsoCallbackUrl(origin: string, token: string) {
-  const url = new URL(SSO_CALLBACK_PATH, origin);
+  const url = new URL(getCallbackPath(origin), origin);
   url.searchParams.set("token", token);
 
   return url.toString();

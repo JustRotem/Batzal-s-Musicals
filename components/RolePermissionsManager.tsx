@@ -6,6 +6,11 @@ import {
   type AvailablePermission,
   type PermissionCategory,
   getPermissionCategoryLabel,
+  getPermissionGroupLabel,
+  getPermissionSite,
+  getPermissionSiteLabel,
+  PERMISSION_SITES,
+  type PermissionSite,
 } from "@/lib/permissions";
 import HighlightedText from "@/components/HighlightedText";
 import { formatMessage, getTranslations, type AppLanguage } from "@/lib/i18n";
@@ -61,7 +66,7 @@ function sortByCategory(
 
   return Array.from(groups.entries()).map(([category, items]) => ({
     category,
-    label: getPermissionCategoryLabel(category, language),
+    label: getPermissionGroupLabel(category, language),
     permissions: items.map((permission) => ({
       ...permission,
       assigned: selected.has(permission.name),
@@ -79,20 +84,13 @@ export default function RolePermissionsManager({
   const [activeRole, setActiveRole] = useState<UserRole>(roles[0]?.role ?? UserRole.user);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [activeFilter, setActiveFilter] = useState<"all" | PermissionCategory>("all");
+  const [activeFilter, setActiveFilter] = useState<"all" | PermissionSite>("all");
   const [, setSelectionVersion] = useState(0);
   const formRefs = useRef<Record<string, HTMLFormElement | null>>({});
 
-  const filterItems: Array<{ value: "all" | PermissionCategory; label: string }> = [
+  const filterItems: Array<{ value: "all" | PermissionSite; label: string }> = [
     { value: "all", label: t.admin.allPermissionFilters },
-    { value: "musicals", label: getPermissionCategoryLabel("musicals", language) },
-    { value: "clips", label: getPermissionCategoryLabel("clips", language) },
-    { value: "users", label: getPermissionCategoryLabel("users", language) },
-    { value: "roles", label: getPermissionCategoryLabel("roles", language) },
-    {
-      value: "editor-requests",
-      label: getPermissionCategoryLabel("editor-requests", language),
-    },
+    ...PERMISSION_SITES.map((site) => ({ value: site, label: getPermissionSiteLabel(site, language) })),
   ];
 
   useEffect(() => {
@@ -106,7 +104,7 @@ export default function RolePermissionsManager({
   }, [searchInput]);
 
   const visiblePermissions = availablePermissions.filter((permission) => {
-    if (activeFilter !== "all" && permission.category !== activeFilter) {
+    if (activeFilter !== "all" && getPermissionSite(permission.category) !== activeFilter) {
       return false;
     }
 
@@ -116,7 +114,7 @@ export default function RolePermissionsManager({
   const activeFilterCount =
     activeFilter === "all"
       ? availablePermissions.length
-      : availablePermissions.filter((permission) => permission.category === activeFilter).length;
+      : availablePermissions.filter((permission) => getPermissionSite(permission.category) === activeFilter).length;
   const activeRoleData = useMemo(
     () => roles.find((role) => role.role === activeRole) ?? roles[0],
     [activeRole, roles],
@@ -229,7 +227,7 @@ export default function RolePermissionsManager({
             const count =
               item.value === "all"
                 ? availablePermissions.length
-                : availablePermissions.filter((permission) => permission.category === item.value)
+                : availablePermissions.filter((permission) => getPermissionSite(permission.category) === item.value)
                     .length;
 
             return (

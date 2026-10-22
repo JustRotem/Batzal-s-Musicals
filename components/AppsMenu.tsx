@@ -1,14 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { setPreferredLanguageAction } from "@/app/actions";
 import { BATZAL_SITES } from "@/lib/batzal-sites";
-import type { AppLanguage } from "@/lib/i18n";
+import { getLanguageLabel, type AppLanguage } from "@/lib/i18n";
 
 export default function AppsMenu({ language }: { language: AppLanguage }) {
   const [open, setOpen] = useState(false);
   const [host, setHost] = useState("");
   const wrapRef = useRef<HTMLDivElement>(null);
   const label = language === "he" ? "האתרים שלי" : "My sites";
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const redirectTo = useMemo(() => {
+    const search = searchParams?.toString();
+
+    return `${pathname || "/"}${search ? `?${search}` : ""}`;
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     setHost(window.location.hostname);
@@ -74,6 +83,18 @@ export default function AppsMenu({ language }: { language: AppLanguage }) {
               <span>{language === "he" ? site.he : site.en}</span>
             </a>
           ))}
+          <div className="bz-menu-lang">
+            <span>{language === "he" ? "שפה" : "Language"}</span>
+            {(["he", "en"] as const).map((option) => (
+              <form key={option} action={setPreferredLanguageAction}>
+                <input type="hidden" name="language" value={option} />
+                <input type="hidden" name="redirectTo" value={redirectTo} />
+                <button type="submit" aria-pressed={option === language}>
+                  {getLanguageLabel(option)}
+                </button>
+              </form>
+            ))}
+          </div>
         </div>
       ) : null}
     </div>

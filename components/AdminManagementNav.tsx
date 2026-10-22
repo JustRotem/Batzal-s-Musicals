@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { isAccountMode } from "@/lib/app-mode";
 import { type AppLanguage, getTranslations } from "@/lib/i18n";
 
 type AdminSection = "accounts" | "comments" | "permissions";
@@ -21,6 +22,20 @@ export default function AdminManagementNav({
   openCommentReports = 0,
 }: AdminManagementNavProps) {
   const t = getTranslations(language);
+  const accountSite = isAccountMode();
+
+  // The account site manages accounts and permissions; the musicals site keeps the comment reports.
+  showComments = showComments && !accountSite;
+  showAccounts = showAccounts && accountSite;
+  showPermissions = showPermissions && accountSite;
+
+  if (!showAccounts && !showPermissions && !showComments) {
+    return null;
+  }
+
+  if (!accountSite) {
+    return null;
+  }
 
   return (
     <nav className="account-section-nav admin-section-nav-shell" aria-label={t.admin.navAria}>

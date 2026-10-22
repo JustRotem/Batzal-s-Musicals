@@ -27,3 +27,6 @@ public/uploads/**/*
 !public/uploads/avatars/.gitkeep
 !public/uploads/musicals/
 !public/uploads/musicals/.gitkeep
+
+.next-musicals
+.next-account
