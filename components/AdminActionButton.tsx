@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import ModalCloseButton from "@/components/ModalCloseButton";
 import { useFormStatus } from "react-dom";
 
 type AdminActionButtonProps = {
@@ -77,6 +78,7 @@ export default function AdminActionButton({
             aria-labelledby="admin-confirm-title"
             onClick={(event) => event.stopPropagation()}
           >
+            <ModalCloseButton onClick={() => setConfirmOpen(false)} />
             <div className="confirm-modal-copy">
               <h2 id="admin-confirm-title" className="panel-title">
                 {confirmTitle}
@@ -85,13 +87,6 @@ export default function AdminActionButton({
             </div>
 
             <div className="button-row confirm-modal-actions">
-              <button
-                type="button"
-                className="button-secondary"
-                onClick={() => setConfirmOpen(false)}
-              >
-                ביטול
-              </button>
               <button
                 type="button"
                 className={className}

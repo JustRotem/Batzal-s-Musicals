@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import ModalCloseButton from "@/components/ModalCloseButton";
 import { useFormStatus } from "react-dom";
 
 type PromotionOption = {
@@ -94,6 +95,7 @@ export default function RolePromotionControl({
             aria-labelledby="role-picker-title"
             onClick={(event) => event.stopPropagation()}
           >
+            <ModalCloseButton onClick={() => setOpen(false)} />
             <div className="confirm-modal-copy">
               <h2 id="role-picker-title" className="panel-title">
                 {dialogTitle}
@@ -119,15 +121,6 @@ export default function RolePromotionControl({
               ))}
             </form>
 
-            <div className="button-row confirm-modal-actions">
-              <button
-                type="button"
-                className="button-secondary"
-                onClick={() => setOpen(false)}
-              >
-                {cancelLabel}
-              </button>
-            </div>
           </div>
         </div>
       ) : null}

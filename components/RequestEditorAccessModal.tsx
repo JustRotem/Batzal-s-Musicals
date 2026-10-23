@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ModalCloseButton from "@/components/ModalCloseButton";
 import { createPortal } from "react-dom";
 import AuthSubmitButton from "@/components/AuthSubmitButton";
 import { getTranslations, type AppLanguage } from "@/lib/i18n";
@@ -66,6 +67,7 @@ export default function RequestEditorAccessModal({
                 aria-labelledby="editor-request-title"
                 onClick={(event) => event.stopPropagation()}
               >
+                <ModalCloseButton onClick={() => setOpen(false)} />
                 <div className="crop-modal-header">
                   <div>
                     <h2 id="editor-request-title" className="panel-title">
@@ -95,13 +97,6 @@ export default function RequestEditorAccessModal({
                   </div>
 
                   <div className="button-row profile-action-row" style={{ marginTop: 0 }}>
-                    <button
-                      type="button"
-                      className="button-secondary"
-                      onClick={() => setOpen(false)}
-                    >
-                      {t.common.cancel}
-                    </button>
                     <AuthSubmitButton
                       idleLabel={t.editorRequest.submit}
                       pendingLabel={t.editorRequest.pending}

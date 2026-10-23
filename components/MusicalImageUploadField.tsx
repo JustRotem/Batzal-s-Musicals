@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
+import ModalCloseButton from "@/components/ModalCloseButton";
 import Cropper from "react-easy-crop";
 import MusicalArtwork from "@/components/MusicalArtwork";
 import { getTranslations, type AppLanguage } from "@/lib/i18n";
@@ -608,6 +609,7 @@ export default function MusicalImageUploadField({
                 aria-labelledby={`${inputId}-crop-title`}
                 onClick={(event) => event.stopPropagation()}
               >
+                <ModalCloseButton onClick={closeCropper} />
                 <div className="crop-modal-header">
                   <div>
                     <h2 id={`${inputId}-crop-title`} className="panel-title">
@@ -710,9 +712,6 @@ export default function MusicalImageUploadField({
                     onClick={handleReplaceImage}
                   >
                     {replaceImageLabel}
-                  </button>
-                  <button type="button" className="button-secondary" onClick={closeCropper}>
-                    {copy.cancel}
                   </button>
                   <button
                     type="button"

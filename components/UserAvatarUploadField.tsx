@@ -8,6 +8,7 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
+import ModalCloseButton from "@/components/ModalCloseButton";
 import { createPortal } from "react-dom";
 import Cropper from "react-easy-crop";
 import UserAvatar from "@/components/UserAvatar";
@@ -574,6 +575,7 @@ export default function UserAvatarUploadField({
                 aria-labelledby={`${inputId}-crop-title`}
                 onClick={(event) => event.stopPropagation()}
               >
+                <ModalCloseButton onClick={closeCropper} disabled={isSaving} />
                 <div className="crop-modal-header">
                   <div>
                     <h2 id={`${inputId}-crop-title`} className="panel-title">
@@ -659,14 +661,6 @@ export default function UserAvatarUploadField({
                 </div>
 
                 <div className="button-row" style={{ marginTop: 0 }}>
-                  <button
-                    type="button"
-                    className="button-secondary"
-                    onClick={closeCropper}
-                    disabled={isSaving}
-                  >
-                    {copy.cancel}
-                  </button>
                   {uploadStatus === "error" ? (
                     <button
                       type="button"

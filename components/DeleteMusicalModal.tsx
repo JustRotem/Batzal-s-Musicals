@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import ModalCloseButton from "@/components/ModalCloseButton";
 import { createPortal } from "react-dom";
 
 type DeleteMusicalModalProps = {
@@ -19,8 +20,6 @@ export default function DeleteMusicalModal({
   const [mounted, setMounted] = useState(false);
   const [open, setOpen] = useState(false);
   const [confirmationValue, setConfirmationValue] = useState("");
-  const [copied, setCopied] = useState(false);
-  const copyTimeoutRef = useRef<number | null>(null);
   const copy =
     language === "en"
       ? {
@@ -29,7 +28,6 @@ export default function DeleteMusicalModal({
           text: "This will also delete all of the item's clips.",
           target: "Item to Delete",
           confirmLabel: "To delete it, type the item title",
-          cancel: "Cancel",
           confirm: "Delete Item",
         }
       : {
@@ -38,7 +36,6 @@ export default function DeleteMusicalModal({
           text: "הפעולה תמחק גם את כל הקטעים של הפריט.",
           target: "הפריט שיימחק",
           confirmLabel: "כדי למחוק, הקלד את שם הפריט",
-          cancel: "ביטול",
           confirm: "מחק פריט",
         };
 
@@ -50,11 +47,6 @@ export default function DeleteMusicalModal({
 
   useEffect(() => {
     if (!open) {
-      if (copyTimeoutRef.current) {
-        window.clearTimeout(copyTimeoutRef.current);
-        copyTimeoutRef.current = null;
-      }
-      setCopied(false);
       return;
     }
 
@@ -75,44 +67,6 @@ export default function DeleteMusicalModal({
       document.removeEventListener("keydown", handleEscape);
     };
   }, [open]);
-
-  useEffect(() => {
-    return () => {
-      if (copyTimeoutRef.current) {
-        window.clearTimeout(copyTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  async function handleCopyTitle() {
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(musicalTitle);
-      } else {
-        const input = document.createElement("textarea");
-        input.value = musicalTitle;
-        input.setAttribute("readonly", "true");
-        input.style.position = "fixed";
-        input.style.top = "-1000px";
-        input.style.opacity = "0";
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand("copy");
-        document.body.removeChild(input);
-      }
-
-      setCopied(true);
-      if (copyTimeoutRef.current) {
-        window.clearTimeout(copyTimeoutRef.current);
-      }
-      copyTimeoutRef.current = window.setTimeout(() => {
-        setCopied(false);
-        copyTimeoutRef.current = null;
-      }, 1600);
-    } catch {
-      setCopied(false);
-    }
-  }
 
   return (
     <>
@@ -160,6 +114,13 @@ export default function DeleteMusicalModal({
                 aria-labelledby="delete-musical-title"
                 onClick={(event) => event.stopPropagation()}
               >
+                <ModalCloseButton
+                  label={language === "en" ? "Close" : "סגור"}
+                  onClick={() => {
+                    setOpen(false);
+                    setConfirmationValue("");
+                  }}
+                />
                 <div>
                   <h2
                     id="delete-musical-title"
@@ -185,57 +146,9 @@ export default function DeleteMusicalModal({
                     {copy.target}
                   </div>
                   <div className="delete-musical-title-row">
-                    <div
-                      className="show-name"
-                      dir="auto"
-                      style={{ fontSize: 24 }}
-                    >
+                    <div className="show-name" dir="auto" style={{ fontSize: 24 }}>
                       {musicalTitle}
                     </div>
-                    <button
-                      type="button"
-                      className={`copy-title-button ${copied ? "is-copied" : ""}`}
-                      onClick={handleCopyTitle}
-                      aria-label={language === "en" ? "Copy item title" : "העתק שם פריט"}
-                      title={language === "en" ? "Copy item title" : "העתק שם פריט"}
-                    >
-                      {copied ? (
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                          <path
-                            d="M20.25 6.75 9.75 17.25 4 11.5"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      ) : (
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                          <rect
-                            x="9"
-                            y="9"
-                            width="10"
-                            height="10"
-                            rx="2"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                          />
-                          <rect
-                            x="5"
-                            y="5"
-                            width="10"
-                            height="10"
-                            rx="2"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            opacity="0.6"
-                          />
-                        </svg>
-                      )}
-                    </button>
                   </div>
                 </div>
 
@@ -257,16 +170,6 @@ export default function DeleteMusicalModal({
                   </div>
 
                   <div className="button-row" style={{ marginTop: 0 }}>
-                    <button
-                      type="button"
-                      className="button-secondary"
-                      onClick={() => {
-                        setOpen(false);
-                        setConfirmationValue("");
-                      }}
-                    >
-                      {copy.cancel}
-                    </button>
                     <button
                       type="submit"
                       className="button-danger"

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ModalCloseButton from "@/components/ModalCloseButton";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import Cropper from "react-easy-crop";
 import { createClipAction } from "@/app/admin/library/actions";
@@ -378,7 +379,6 @@ export default function NewClipForm({
       ? "בחרו את האזור שישמש כתמונת התצוגה של הקטע."
       : "Choose the area to use as the clip thumbnail.";
   const thumbnailZoomLabel = language === "he" ? "זום" : "Zoom";
-  const thumbnailCropCancel = language === "he" ? "ביטול" : "Cancel";
   const thumbnailCropSave = language === "he" ? "שמור" : "Save";
   const canSaveThumbnailCrop = Boolean(thumbnailCroppedArea);
 
@@ -1084,6 +1084,7 @@ export default function NewClipForm({
                   aria-labelledby="clip-thumbnail-crop-title"
                   onClick={(event) => event.stopPropagation()}
                 >
+                  <ModalCloseButton onClick={() => closeThumbnailCropper(false)} />
                   <div className="crop-modal-header">
                     <h2 id="clip-thumbnail-crop-title" className="panel-title">
                       {thumbnailCropTitle}
@@ -1128,9 +1129,6 @@ export default function NewClipForm({
                   </div>
 
                   <div className="button-row crop-modal-actions">
-                    <button type="button" className="button-secondary" onClick={() => closeThumbnailCropper(false)}>
-                      {thumbnailCropCancel}
-                    </button>
                     <button
                       type="button"
                       className="button-primary"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import ModalCloseButton from "@/components/ModalCloseButton";
 import { createPortal } from "react-dom";
 
 type DeleteClipModalProps = {
@@ -113,6 +114,7 @@ export default function DeleteClipModal({
                 aria-labelledby="delete-clip-title"
                 onClick={(event) => event.stopPropagation()}
               >
+                <ModalCloseButton label={language === "en" ? "Close" : "סגור"} onClick={() => setOpen(false)} />
                 <div>
                   <h2
                     id="delete-clip-title"
@@ -148,13 +150,6 @@ export default function DeleteClipModal({
                   <input type="hidden" name="currentSlug" value={currentSlug} />
 
                   <div className="button-row" style={{ marginTop: 0 }}>
-                    <button
-                      type="button"
-                      className="button-secondary"
-                      onClick={() => setOpen(false)}
-                    >
-                      {copy.cancel}
-                    </button>
                     <button type="submit" className="button-danger">
                       {copy.confirm}
                     </button>
