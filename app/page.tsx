@@ -30,7 +30,7 @@ export default async function HomePage() {
   const currentUser = await getCurrentUser();
   const canSeeUnpublished = currentUser ? await canManageMusicalContent(currentUser) : false;
   const popularClips = await db.clip.findMany({
-    where: canSeeUnpublished ? undefined : { musical: { isPublished: true } },
+    where: canSeeUnpublished ? undefined : { isDraft: false, musical: { isPublished: true } },
     orderBy: [{ comments: { _count: "desc" } }, { createdAt: "desc" }],
     take: 5,
     select: {
@@ -47,6 +47,7 @@ export default async function HomePage() {
     include: {
       category: true,
       clips: {
+        where: canSeeUnpublished ? undefined : { isDraft: false },
         orderBy: { sortOrder: "asc" },
       },
     },
@@ -176,13 +177,23 @@ export default async function HomePage() {
                     className="home-quick-link"
                     href={`/library/${clip.musical.slug}#clip-${clip.id}`}
                   >
-                    <span className="home-quick-link-title">{clip.title}</span>
-                    <span className="home-quick-link-text">
-                      {clip.musical.title}
-                      {clip._count.comments > 0
-                        ? ` · ${clip._count.comments} ${language === "he" ? "תגובות" : "comments"}`
-                        : ""}
+                    <span className="home-clip-line is-title" dir="auto">
+                      {clip.title}
                     </span>
+                    <span className="home-clip-line is-item" dir="auto">
+                      {clip.musical.title}
+                    </span>
+                    {clip._count.comments > 0 ? (
+                      <span className="home-clip-line is-count" dir={language === "he" ? "rtl" : "ltr"}>
+                        {language === "he"
+                          ? clip._count.comments === 1
+                            ? "תגובה אחת"
+                            : `${clip._count.comments} תגובות`
+                          : clip._count.comments === 1
+                            ? "1 comment"
+                            : `${clip._count.comments} comments`}
+                      </span>
+                    ) : null}
                   </Link>
                 ))
               )}

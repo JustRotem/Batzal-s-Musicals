@@ -7,6 +7,8 @@ import {
   getPermissionSiteLabel,
   syncPermissionDefinitions,
 } from "@/lib/permissions";
+import { getAccountUrl } from "@/lib/app-mode";
+import { notifyUsers } from "@/lib/notifications";
 import { authorizeServiceRequest } from "@/lib/service-api";
 import { PermissionName, UserRole, UserStatus } from "@/lib/prisma";
 
@@ -168,6 +170,15 @@ export async function POST(request: Request) {
     if (role === UserRole.superadmin && actor.role !== "superadmin") return json({ error: "forbidden" }, 403);
 
     await db.user.update({ where: { id: target.id }, data: { role, status: UserStatus.active } });
+
+    await notifyUsers([target.id], {
+      kind: "rank-changed",
+      titleHe: "הדרגה שלך עודכנה",
+      titleEn: "Your rank was updated",
+      bodyHe: "הדרגה החדשה כבר בתוקף בכל האתרים.",
+      bodyEn: "The new rank is already in effect on every site.",
+      href: `${getAccountUrl()}/profile`,
+    });
 
     return json({ ok: true });
   }

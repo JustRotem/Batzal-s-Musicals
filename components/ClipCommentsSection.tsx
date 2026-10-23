@@ -17,8 +17,13 @@ import {
   createClipCommentAction,
   createClipCommentReportAction,
   hideClipCommentAction,
+  toggleCommentReactionAction,
   type ClipCommentFormState,
 } from "@/app/library/actions";
+import { REACTION_EMOJIS } from "@/lib/clip-comments";
+import FullEmojiPicker from "@/components/FullEmojiPicker";
+import ModalCloseButton from "@/components/ModalCloseButton";
+import { createPortal } from "react-dom";
 
 type ClipCommentsSectionProps = {
   clipId: string;
@@ -79,6 +84,10 @@ function getCommentsCopy(language: AppLanguage) {
       authText: "Sign in to post a comment and join the conversation.",
       authButton: "Sign in to comment",
       empty: "No comments yet",
+      reactions: "Reactions",
+      addReaction: "Add reaction",
+      noReactions: "No reactions yet",
+      moreEmojis: "All emoji",
       remove: "Delete Comment",
       hide: "Hide Comment",
       hiding: "Removing...",
@@ -109,6 +118,10 @@ function getCommentsCopy(language: AppLanguage) {
     authText: "צריך להתחבר כדי לפרסם תגובה ולראות אתכם כחלק מהשיחה.",
     authButton: "התחברו כדי להגיב",
     empty: "אין תגובות עדיין",
+    reactions: "תגובות אימוג׳י",
+    addReaction: "הוסף תגובה",
+    noReactions: "עוד אין תגובות אימוג׳י",
+    moreEmojis: "כל האימוג׳ים",
     remove: "מחק תגובה",
     hide: "הסתר תגובה",
     hiding: "מסיר...",
@@ -145,12 +158,52 @@ export default function ClipCommentsSection({
   const [reportReason, setReportReason] = useState(reportReasonOptions[0]?.value ?? "spam");
   const [reportDetails, setReportDetails] = useState("");
   const [reportedIds, setReportedIds] = useState<string[]>(reportedCommentIds);
+  const [reactionPickerFor, setReactionPickerFor] = useState<string | null>(null);
+  const [fullPickerOpen, setFullPickerOpen] = useState(false);
+  const [popoverUp, setPopoverUp] = useState(true);
 
   const pathname = usePathname();
 
   useEffect(() => {
     setComments(initialComments);
   }, [initialComments]);
+
+  useEffect(() => {
+    if (!fullPickerOpen || popoverUp) return;
+
+    const timer = window.setTimeout(() => {
+      document.querySelector(".reaction-popover")?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [fullPickerOpen, popoverUp]);
+
+  useEffect(() => {
+    if (!reactionPickerFor) return;
+
+    const onClick = (event: MouseEvent) => {
+      const owner = (event.target as HTMLElement | null)?.closest?.("[data-reactions-for]");
+
+      if (!owner || owner.getAttribute("data-reactions-for") !== reactionPickerFor) {
+        setReactionPickerFor(null);
+        setFullPickerOpen(false);
+      }
+    };
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setReactionPickerFor(null);
+        setFullPickerOpen(false);
+      }
+    };
+
+    document.addEventListener("click", onClick);
+    document.addEventListener("keydown", onKey);
+
+    return () => {
+      document.removeEventListener("click", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [reactionPickerFor]);
 
   useEffect(() => {
     setReportedIds(reportedCommentIds);
@@ -186,6 +239,52 @@ export default function ClipCommentsSection({
           message: result.message,
         });
       }
+    });
+  }
+
+  function handleReact(commentId: string, emoji: string) {
+    setReactionPickerFor(null);
+    setFullPickerOpen(false);
+
+    // show the change at once, then take the server's numbers
+    setComments((current) =>
+      current.map((comment) => {
+        if (comment.id !== commentId) return comment;
+
+        const myName = currentUser?.username ?? "";
+        const without = (users: string[]) => users.filter((name) => name !== myName);
+        const hadSame = comment.reactions.some((reaction) => reaction.emoji === emoji && reaction.mine);
+        // my previous reaction (if any) is replaced
+        let reactions = comment.reactions
+          .map((reaction) =>
+            reaction.mine
+              ? { ...reaction, mine: false, count: reaction.count - 1, users: without(reaction.users) }
+              : reaction,
+          )
+          .filter((reaction) => reaction.count > 0);
+
+        if (!hadSame) {
+          const existing = reactions.find((reaction) => reaction.emoji === emoji);
+
+          reactions = existing
+            ? reactions.map((reaction) =>
+                reaction.emoji === emoji
+                  ? { ...reaction, mine: true, count: reaction.count + 1, users: [...reaction.users, myName] }
+                  : reaction,
+              )
+            : [...reactions, { emoji, count: 1, mine: true, users: [myName] }];
+        }
+
+        return { ...comment, reactions };
+      }),
+    );
+
+    void toggleCommentReactionAction(commentId, emoji).then((result) => {
+      if (!result.ok) return;
+
+      setComments((current) =>
+        current.map((comment) => (comment.id === commentId ? { ...comment, reactions: result.reactions } : comment)),
+      );
     });
   }
 
@@ -398,70 +497,180 @@ export default function ClipCommentsSection({
                     {comment.content}
                   </div>
 
-                  {reportIsOpen ? (
-                    <div className="clip-comment-report-panel">
-                      <label className="field" htmlFor={`report-reason-${comment.id}`}>
-                        <span className="field-label">{copy.reportReason}</span>
-                        <select
-                          id={`report-reason-${comment.id}`}
-                          className="input"
-                          value={reportReason}
-                          onChange={(event) => setReportReason(event.currentTarget.value as typeof reportReason)}
-                          disabled={isReportingThisComment}
+                  <div className="clip-comment-reactions" role="group" aria-label={copy.reactions} data-reactions-for={comment.id}>
+                    {comment.reactions
+                      .filter((reaction) => reaction.count > 0)
+                      .map((reaction) => (
+                        <button
+                          key={reaction.emoji}
+                          type="button"
+                          className={`reaction-pill ${reaction.mine ? "is-mine" : ""}`}
+                          title={reaction.users.join(", ")}
+                          onClick={(event) => {
+                            const box = event.currentTarget.closest("[data-reactions-for]")?.getBoundingClientRect();
+
+                            // the full emoji list is tall: open upward when there is room, otherwise downward
+                            const headerHeight = document.querySelector("header")?.getBoundingClientRect().height ?? 0;
+
+                            setPopoverUp(box ? box.top - headerHeight > 440 : true);
+                            setFullPickerOpen(false);
+                            setReactionPickerFor((current) => (current === comment.id ? null : comment.id));
+                          }}
                         >
-                          {reportReasonOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
+                          <span>{reaction.emoji}</span>
+                          <span>{reaction.count}</span>
+                        </button>
+                      ))}
+                    {currentUser && !comment.reactions.some((reaction) => reaction.mine) ? (
+                      <button
+                        type="button"
+                        className="reaction-pill reaction-add-button"
+                        aria-label={copy.addReaction}
+                        title={copy.addReaction}
+                        onClick={(event) => {
+                            const box = event.currentTarget.closest("[data-reactions-for]")?.getBoundingClientRect();
 
-                      <label className="field" htmlFor={`report-details-${comment.id}`}>
-                        <span className="field-label">{copy.reportDetails}</span>
-                        <textarea
-                          id={`report-details-${comment.id}`}
-                          className="textarea clip-comment-report-textarea"
-                          rows={3}
-                          maxLength={COMMENT_REPORT_MAX_DETAILS_LENGTH}
-                          placeholder={copy.reportDetailsPlaceholder}
-                          value={reportDetails}
-                          disabled={isReportingThisComment}
-                          onChange={(event) => setReportDetails(event.currentTarget.value)}
-                        />
-                      </label>
+                            // the full emoji list is tall: open upward when there is room, otherwise downward
+                            const headerHeight = document.querySelector("header")?.getBoundingClientRect().height ?? 0;
 
-                      <div className="clip-comment-report-footer">
-                        <span className="show-meta">
-                          {copy.reportHint}
-                        </span>
-                        <div className="clip-comment-report-actions">
-                          <button
-                            type="button"
-                            className="button-secondary button-small"
-                            disabled={isReportingThisComment}
-                            onClick={() => setReportingCommentId(null)}
-                          >
-                            {copy.cancel}
-                          </button>
-                          <button
-                            type="button"
-                            className="button-primary button-small"
-                            disabled={isReportingThisComment}
-                            onClick={() => handleReportSubmit(comment.id)}
-                          >
-                            {isReportingThisComment ? copy.sendingReport : copy.sendReport}
-                          </button>
-                        </div>
+                            setPopoverUp(box ? box.top - headerHeight > 440 : true);
+                            setFullPickerOpen(false);
+                            setReactionPickerFor((current) => (current === comment.id ? null : comment.id));
+                          }}
+                      >
+                        +
+                      </button>
+                    ) : null}
+                    {reactionPickerFor === comment.id ? (
+                      <div className={`reaction-popover ${popoverUp ? "is-up" : ""}`} role="dialog" aria-label={copy.reactions}>
+                        {currentUser ? (
+                          <>
+                            <div className="reaction-picker-row" role="menu">
+                              {REACTION_EMOJIS.map((emoji) => {
+                                const selected = comment.reactions.some((reaction) => reaction.emoji === emoji && reaction.mine);
+
+                                return (
+                                  <button
+                                    key={emoji}
+                                    type="button"
+                                    role="menuitemradio"
+                                    aria-checked={selected}
+                                    className={selected ? "is-selected" : undefined}
+                                    onClick={() => handleReact(comment.id, emoji)}
+                                  >
+                                    {emoji}
+                                  </button>
+                                );
+                              })}
+                              <button
+                                type="button"
+                                className={`reaction-more ${fullPickerOpen ? "is-open" : ""}`}
+                                aria-label={copy.moreEmojis}
+                                title={copy.moreEmojis}
+                                aria-expanded={fullPickerOpen}
+                                onClick={() => setFullPickerOpen((open) => !open)}
+                              >
+                                +
+                              </button>
+                            </div>
+                            {fullPickerOpen ? (
+                              <FullEmojiPicker language={language} onPick={(emoji) => handleReact(comment.id, emoji)} />
+                            ) : null}
+                          </>
+                        ) : null}
+                        {comment.reactions.some((reaction) => reaction.count > 0) ? (
+                          <ul className="reaction-who">
+                            {comment.reactions
+                              .filter((reaction) => reaction.count > 0)
+                              .map((reaction) => (
+                                <li key={reaction.emoji}>
+                                  <span className="reaction-who-emoji">{reaction.emoji}</span>
+                                  <span dir="auto">{reaction.users.join(", ")}</span>
+                                </li>
+                              ))}
+                          </ul>
+                        ) : (
+                          <div className="reaction-who-empty">{copy.noReactions}</div>
+                        )}
                       </div>
-                    </div>
-                  ) : null}
+                    ) : null}
+                  </div>
+
                 </div>
               </article>
             );
           })}
         </div>
       )}
+
+      {reportingCommentId && typeof document !== "undefined"
+        ? createPortal(
+            <div className="confirm-modal-overlay" onClick={() => setReportingCommentId(null)}>
+              <div
+                className="card confirm-modal-card report-modal-card"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="report-modal-title"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <ModalCloseButton
+                  label={language === "he" ? "סגור" : "Close"}
+                  onClick={() => setReportingCommentId(null)}
+                  disabled={isReporting}
+                />
+                <div className="confirm-modal-copy">
+                  <h2 id="report-modal-title" className="panel-title">
+                    {copy.report}
+                  </h2>
+                  <p className="viewer-text">{copy.reportHint}</p>
+                </div>
+
+                <label className="field" htmlFor="report-reason-modal">
+                  <span className="field-label">{copy.reportReason}</span>
+                  <select
+                    id="report-reason-modal"
+                    className="input"
+                    value={reportReason}
+                    onChange={(event) => setReportReason(event.currentTarget.value as typeof reportReason)}
+                    disabled={isReporting}
+                  >
+                    {reportReasonOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="field" htmlFor="report-details-modal">
+                  <span className="field-label">{copy.reportDetails}</span>
+                  <textarea
+                    id="report-details-modal"
+                    className="textarea clip-comment-report-textarea"
+                    rows={3}
+                    maxLength={COMMENT_REPORT_MAX_DETAILS_LENGTH}
+                    placeholder={copy.reportDetailsPlaceholder}
+                    value={reportDetails}
+                    disabled={isReporting}
+                    onChange={(event) => setReportDetails(event.currentTarget.value)}
+                  />
+                </label>
+
+                <div className="button-row confirm-modal-actions">
+                  <button
+                    type="button"
+                    className="button-primary"
+                    disabled={isReporting}
+                    onClick={() => handleReportSubmit(reportingCommentId)}
+                  >
+                    {isReporting ? copy.sendingReport : copy.sendReport}
+                  </button>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </section>
   );
 }

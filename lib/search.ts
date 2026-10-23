@@ -15,6 +15,8 @@ export type SearchMusicalResult = {
   thumbnailUrl: string | null;
   emoji: string | null;
   snippet: string;
+  // The item's own description, plain text; empty when it has none
+  descriptionText: string;
 };
 
 export type SearchClipResult = {
@@ -131,6 +133,7 @@ function buildClipWhere(args: {
   const musicalFilter = args.year ? { ...musicalVisibility, year: args.year } : musicalVisibility;
 
   return {
+    ...(args.canViewUnpublished ? {} : { isDraft: false }),
     ...(args.year || !args.canViewUnpublished
       ? {
           musical: musicalFilter,
@@ -319,6 +322,7 @@ export async function searchContent(
         thumbnailUrl: musical.thumbnailUrl,
         emoji: musical.emoji,
         snippet: buildSnippet(snippetSource, query, fallbackSnippet),
+        descriptionText: descriptionText.slice(0, 240),
         _score: scoreMusicalMatch({
           title: musical.title,
           descriptionText,

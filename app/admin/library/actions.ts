@@ -449,6 +449,7 @@ export async function createClipAction(formData: FormData) {
         startSeconds: resolvedStartSeconds,
         endSeconds: resolvedEndSeconds,
         sortOrder,
+        isDraft: formData.get("intent") === "draft",
         createdById: currentUser.id,
         updatedById: currentUser.id,
       },
@@ -583,6 +584,7 @@ export async function updateClipAction(formData: FormData) {
         startSeconds: resolvedStartSeconds,
         endSeconds: resolvedEndSeconds,
         sortOrder,
+        isDraft: formData.get("intent") === "draft",
         updatedById: currentUser.id,
       },
     });

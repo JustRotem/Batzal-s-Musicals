@@ -18,7 +18,6 @@ describe("musical form parsing and validation helpers", () => {
       ["description", "A classic"],
       ["year", "1999"],
       ["posterDisplayMode", "fit"],
-      ["isPublished", "on"],
     ]);
 
     const result = getMusicalFormData(formData);
@@ -42,11 +41,12 @@ describe("musical form parsing and validation helpers", () => {
     assert.equal(parseOptionalYear("not-a-year"), null);
   });
 
-  it("defaults isPublished to false when missing", () => {
-    const formData = buildFormData([["title", "Draft Musical"]]);
-    const result = getMusicalFormData(formData);
+  it("publishes by default and keeps a draft unpublished", () => {
+    const published = getMusicalFormData(buildFormData([["title", "Item"]]));
+    const draft = getMusicalFormData(buildFormData([["title", "Item"], ["intent", "draft"]]));
 
-    assert.equal(result.isPublished, false);
+    assert.equal(published.isPublished, true);
+    assert.equal(draft.isPublished, false);
   });
 
   it("treats an empty image file as null", async () => {

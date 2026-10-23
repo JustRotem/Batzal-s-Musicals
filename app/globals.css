@@ -6370,3 +6370,543 @@ html[dir="ltr"] input[type="email"]::placeholder {
     opacity: 0;
   }
 }
+
+/* A clip reached from search or a link: highlighted for a moment */
+.musical-clip-card {
+  scroll-margin-top: 96px;
+}
+
+.musical-clip-card.is-targeted {
+  animation: clip-targeted 2.6s ease-out;
+}
+
+@keyframes clip-targeted {
+  0%,
+  60% {
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.85), 0 0 32px rgba(139, 92, 246, 0.35);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+  }
+}
+
+/* Drafts */
+.draft-badge {
+  display: inline-block;
+  margin-inline-start: 10px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgb(245 158 11 / 0.18);
+  color: var(--tone-amber);
+  font-size: 0.75rem;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
+.draft-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.draft-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--card-border);
+}
+
+.draft-row strong {
+  display: block;
+}
+
+.draft-meta {
+  display: block;
+  margin-top: 2px;
+  color: var(--soft);
+  font-size: 0.85rem;
+}
+
+/* Emoji reactions under a comment */
+.clip-comment-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.reaction-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  min-height: 28px;
+  border-radius: 999px;
+  border: 1px solid var(--card-border);
+  background: rgb(var(--ink) / 0.04);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.reaction-pill:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.reaction-pill:disabled {
+  cursor: default;
+}
+
+.reaction-pill.is-mine {
+  border-color: var(--accent);
+  background: rgb(139 92 246 / 0.2);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.reaction-add {
+  position: relative;
+  display: inline-flex;
+}
+
+.reaction-add-button {
+  padding: 3px 11px;
+  font-weight: 700;
+}
+
+.reaction-picker {
+  position: absolute;
+  inset-inline-start: 0;
+  bottom: calc(100% + 6px);
+  z-index: 5;
+  display: flex;
+  gap: 2px;
+  padding: 6px;
+  border-radius: 999px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  animation: modal-in 0.14s ease-out;
+}
+
+.reaction-picker button {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.reaction-picker button:hover {
+  background: rgb(var(--ink) / 0.1);
+  transform: scale(1.2);
+}
+
+/* Search dropdown: as wide as the search box, compact rows */
+.header-search-dropdown {
+  inset-inline: 0;
+  width: auto;
+  padding: 10px;
+  border-radius: 22px;
+}
+
+.header-search-result {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 12px;
+  padding: 8px;
+  border-radius: 14px;
+}
+
+.header-search-result-artwork {
+  width: 44px;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+}
+
+.header-search-result-artwork-clip {
+  border-radius: 10px;
+}
+
+.header-search-chip {
+  min-height: 24px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.header-search-result-body {
+  gap: 2px;
+}
+
+.header-search-result-title {
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.header-search-groups {
+  gap: 10px;
+}
+
+/* Search page: one list, compact rows */
+.search-list {
+  display: grid;
+  gap: 10px;
+}
+
+.search-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  background: rgb(var(--ink) / 0.03);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.search-row.no-art {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.search-row:hover {
+  border-color: rgba(139, 92, 246, 0.5);
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.search-row-image {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.search-row-body {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.search-row-title {
+  color: var(--text);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.search-row-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: var(--soft);
+  font-size: 0.85rem;
+}
+
+.search-row-snippet {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.search-results-shell {
+  margin-top: 22px;
+}
+
+/* the filters: one tidy row, then the list below it, full width */
+.search-filters-bar {
+  width: 100%;
+}
+
+.header-search-result.no-art {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (max-width: 720px) {
+  .search-row {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .search-row-image {
+    width: 56px;
+    height: 56px;
+  }
+
+  .search-row.no-art {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.home-clip-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.clip-comment-reactions {
+  position: relative;
+}
+
+.reaction-picker button.is-selected {
+  background: rgb(139 92 246 / 0.3);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* Search rows: bigger picture, a full-height "clip" tile */
+.search-row {
+  grid-template-columns: 96px minmax(0, 1fr);
+}
+
+.search-row.no-art {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.search-row-image {
+  width: 96px;
+  height: 96px;
+  border-radius: 14px;
+}
+
+.search-row.is-clip {
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  align-items: stretch;
+}
+
+.search-row-kind {
+  display: grid;
+  place-items: center;
+  background: rgb(139 92 246 / 0.22);
+  color: var(--tone-violet);
+  font-weight: 800;
+  font-size: 0.95rem;
+  border-inline-end: 1px solid rgb(139 92 246 / 0.3);
+}
+
+.search-row.is-clip .search-row-body {
+  padding: 16px 18px;
+  align-content: center;
+}
+
+.search-row-line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.search-row-parent {
+  color: var(--soft);
+  font-size: 0.9rem;
+}
+
+.search-row-snippet {
+  -webkit-line-clamp: 3;
+}
+
+@media (max-width: 720px) {
+  .search-row {
+    grid-template-columns: 72px minmax(0, 1fr);
+  }
+
+  .search-row-image {
+    width: 72px;
+    height: 72px;
+  }
+
+  .search-row.is-clip {
+    grid-template-columns: 60px minmax(0, 1fr);
+  }
+}
+
+/* "Most discussed clips": every line follows its own language */
+.home-clip-line {
+  display: block;
+  text-align: start;
+}
+
+.home-clip-line.is-title {
+  font-size: 16px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.home-clip-line.is-item {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.home-clip-line.is-count {
+  color: var(--soft);
+  font-size: 12px;
+}
+
+/* Reaction details: who reacted with what, and the choice of emoji */
+.reaction-popover {
+  position: absolute;
+  inset-inline-start: 0;
+  top: calc(100% + 8px);
+  z-index: 6;
+  min-width: 220px;
+  max-width: min(320px, 90vw);
+  padding: 10px;
+  border-radius: 16px;
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
+  animation: modal-in 0.14s ease-out;
+}
+
+.reaction-picker-row {
+  display: flex;
+  gap: 2px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.reaction-picker-row button {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.reaction-picker-row button:hover {
+  background: rgb(var(--ink) / 0.1);
+  transform: scale(1.18);
+}
+
+.reaction-picker-row button.is-selected {
+  background: rgb(139 92 246 / 0.3);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.reaction-who {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.88rem;
+}
+
+.reaction-who li {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.reaction-who-emoji {
+  font-size: 1.05rem;
+}
+
+.reaction-who-empty {
+  color: var(--soft);
+  font-size: 0.88rem;
+}
+
+/* A bit of air above "recently added" */
+.search-recent {
+  margin-top: 30px;
+}
+
+/* The bar drops the search to a second row below 860px, so the page must start lower from there on, not only below 700px */
+@media (max-width: 860px) {
+  .page-shell {
+    padding-top: var(--page-top-offset-mobile);
+  }
+}
+
+.reaction-more {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  background: rgb(var(--ink) / 0.08);
+  color: var(--text);
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.reaction-more:hover,
+.reaction-more.is-open {
+  background: rgb(139 92 246 / 0.3);
+}
+
+.full-emoji-picker {
+  margin-bottom: 8px;
+}
+
+.full-emoji-picker emoji-picker {
+  --num-columns: 8;
+  --emoji-size: 1.35rem;
+  --border-radius: 12px;
+  width: 100%;
+  height: 300px;
+}
+
+.full-emoji-picker emoji-picker.dark {
+  --background: #0f172a;
+  --border-color: rgba(148, 163, 184, 0.25);
+  --input-border-color: rgba(148, 163, 184, 0.35);
+}
+
+.reaction-popover {
+  min-width: min(320px, 90vw);
+}
+
+/* Opens above the reactions when there is room, so the long emoji list does not run off the bottom of the screen */
+.reaction-popover.is-up {
+  top: auto;
+  bottom: calc(100% + 8px);
+}
+
+.report-modal-card {
+  width: min(100%, 520px);
+}
+
+.report-modal-card .field {
+  display: grid;
+  gap: 6px;
+}
+
+.bz-acct-menu > button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Floating windows sit in the middle of the screen (and still scroll when they are taller than it) */
+.confirm-modal-card,
+.crop-modal-card {
+  margin-block: auto;
+}
+
+.report-modal-card {
+  gap: 14px;
+  padding: 22px;
+}

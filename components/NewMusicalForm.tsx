@@ -193,21 +193,16 @@ export default function NewMusicalForm({
           </p>
         </div>
 
-        <label className="toggle-field">
-          <input
-            type="checkbox"
-            name="isPublished"
-            defaultChecked={initialValues.isPublished}
-            className="toggle-input sr-only"
-          />
-          <span className="toggle-control" aria-hidden="true">
-            <span className="toggle-thumb" />
-          </span>
-          <span className="toggle-label">{t.publishNow}</span>
-        </label>
 
         <div className="button-row content-editor-actions" style={{ marginTop: 0 }}>
           <NewMusicalSubmitButton idleLabel={t.create} pendingLabel={t.creating} />
+          <NewMusicalSubmitButton
+            name="intent"
+            value="draft"
+            variant="secondary"
+            idleLabel={language === "he" ? "שמור כטיוטה" : "Save as draft"}
+            pendingLabel={language === "he" ? "שומר..." : "Saving..."}
+          />
           <Link href="/library" className="button-secondary">
             {language === "he" ? "ביטול" : "Cancel"}
           </Link>

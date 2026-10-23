@@ -1209,6 +1209,15 @@ export default function NewClipForm({
             formEncType="multipart/form-data"
             disabled={isCreateDisabled}
           />
+          <NewMusicalSubmitButton
+            name="intent"
+            value="draft"
+            variant="secondary"
+            idleLabel={language === "he" ? "שמור כטיוטה" : "Save as draft"}
+            pendingLabel={language === "he" ? "שומר..." : "Saving..."}
+            formEncType="multipart/form-data"
+            disabled={isCreateDisabled}
+          />
           {cancelHref ? (
             <Link href={cancelHref} className="button-secondary">
               {resolvedCancelLabel}

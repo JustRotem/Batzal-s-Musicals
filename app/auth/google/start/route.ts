@@ -6,7 +6,7 @@ import {
   getGoogleErrorRedirectUrl,
   toGoogleAppUrl,
 } from "@/lib/google-auth";
-import { LOGIN_NEXT_COOKIE, sanitizeNextPath } from "@/lib/login-next";
+import { ACCOUNT_LOGIN_NEXT_COOKIE, sanitizeNextPath } from "@/lib/login-next";
 
 export async function GET(request: NextRequest) {
   const next = sanitizeNextPath(request.nextUrl.searchParams.get("next"));
@@ -25,9 +25,9 @@ export async function GET(request: NextRequest) {
     response.cookies.set(GOOGLE_OAUTH_STATE_COOKIE, state, cookieOptions);
 
     if (next) {
-      response.cookies.set(LOGIN_NEXT_COOKIE, next, cookieOptions);
+      response.cookies.set(ACCOUNT_LOGIN_NEXT_COOKIE, next, cookieOptions);
     } else {
-      response.cookies.delete(LOGIN_NEXT_COOKIE);
+      response.cookies.delete(ACCOUNT_LOGIN_NEXT_COOKIE);
     }
 
     return response;

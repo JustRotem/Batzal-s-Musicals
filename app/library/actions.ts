@@ -1,10 +1,15 @@
 "use server";
 
+import { notifyAdmins } from "@/lib/notifications";
+import { getMusicalsUrl } from "@/lib/app-mode";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import {
   buildClipCommentViews,
+  buildReactionViews,
+  isValidReactionEmoji,
+  type CommentReactionView,
   COMMENT_MAX_LENGTH,
   COMMENT_MIN_INTERVAL_MS,
   type ClipCommentReportActionResult,
@@ -75,7 +80,7 @@ function getCommentActionCopy(language: string) {
   };
 }
 
-async function getVisibleClipComments(clipId: string, locale: string) {
+async function getVisibleClipComments(clipId: string, locale: string, viewerId: string | null = null) {
   const comments = await db.comment.findMany({
     where: {
       clipId,
@@ -85,6 +90,7 @@ async function getVisibleClipComments(clipId: string, locale: string) {
       createdAt: "desc",
     },
     include: {
+      reactions: { select: { userId: true, emoji: true, user: { select: { username: true } } }, orderBy: { createdAt: "asc" } },
       user: {
         select: {
           id: true,
@@ -95,7 +101,7 @@ async function getVisibleClipComments(clipId: string, locale: string) {
     },
   });
 
-  return buildClipCommentViews(comments, locale);
+  return buildClipCommentViews(comments, locale, viewerId);
 }
 
 function buildState(
@@ -218,7 +224,7 @@ export async function createClipCommentAction(
   return {
     status: "success",
     message: copy.created,
-    comments: await getVisibleClipComments(clipId, locale),
+    comments: await getVisibleClipComments(clipId, locale, currentUser?.id ?? null),
   };
 }
 
@@ -277,7 +283,7 @@ export async function hideClipCommentAction(
     return buildState(previousState, {
       status: "error",
       message: copy.unavailableToManage,
-      comments: await getVisibleClipComments(clipId, locale),
+      comments: await getVisibleClipComments(clipId, locale, currentUser?.id ?? null),
     });
   }
 
@@ -288,7 +294,7 @@ export async function hideClipCommentAction(
     return buildState(previousState, {
       status: "error",
       message: copy.noPermission,
-      comments: await getVisibleClipComments(clipId, locale),
+      comments: await getVisibleClipComments(clipId, locale, currentUser?.id ?? null),
     });
   }
 
@@ -307,7 +313,7 @@ export async function hideClipCommentAction(
   return {
     status: "success",
     message: currentUser.id === comment.userId ? copy.removedOwn : copy.hidden,
-    comments: await getVisibleClipComments(clipId, locale),
+    comments: await getVisibleClipComments(clipId, locale, currentUser?.id ?? null),
   };
 }
 
@@ -422,6 +428,18 @@ export async function createClipCommentReportAction(
   });
 
   if (!existingOpenReportForComment) {
+    await notifyAdmins(
+      {
+        kind: "comment-report",
+        titleHe: "דיווח חדש על תגובה",
+        titleEn: "New comment report",
+        bodyHe: `${currentUser.username} דיווח על תגובה.`,
+        bodyEn: `${currentUser.username} reported a comment.`,
+        href: `${getMusicalsUrl()}/admin/comments`,
+      },
+      currentUser.id,
+    );
+
     try {
       await notifyAdminsAboutNewCommentReport({
         reportId: createdReport.id,
@@ -443,4 +461,45 @@ export async function createClipCommentReportAction(
     message: copy.reportSent,
     reportedCommentId: comment.id,
   };
+}
+
+// Sets this person's reaction on a comment, replaces it with another, or removes it.
+export async function toggleCommentReactionAction(
+  commentId: string,
+  emoji: string,
+): Promise<{ ok: boolean; reactions: CommentReactionView[] }> {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser || !isValidReactionEmoji(emoji)) {
+    return { ok: false, reactions: buildReactionViews([], null) };
+  }
+
+  const comment = await db.comment.findFirst({ where: { id: commentId, status: "visible" }, select: { id: true } });
+
+  if (!comment) {
+    return { ok: false, reactions: buildReactionViews([], currentUser.id) };
+  }
+
+  // One reaction per person on a comment: the same emoji again removes it, another emoji replaces it.
+  const mine = await db.commentReaction.findMany({
+    where: { commentId, userId: currentUser.id },
+    select: { id: true, emoji: true },
+  });
+  const sameEmoji = mine.some((reaction) => reaction.emoji === emoji);
+
+  if (mine.length > 0) {
+    await db.commentReaction.deleteMany({ where: { id: { in: mine.map((reaction) => reaction.id) } } });
+  }
+
+  if (!sameEmoji) {
+    await db.commentReaction.create({ data: { commentId, userId: currentUser.id, emoji } });
+  }
+
+  const reactions = await db.commentReaction.findMany({
+    where: { commentId },
+    select: { userId: true, emoji: true, user: { select: { username: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return { ok: true, reactions: buildReactionViews(reactions, currentUser.id) };
 }

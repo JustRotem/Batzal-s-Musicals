@@ -1,6 +1,9 @@
 import { DEFAULT_APP_TITLE } from "@/lib/app-config";
 import { assertProductionReadyEnv, getAppUrl } from "@/lib/env";
 
+// A mail that cannot be sent is a problem in production; locally (no real key) it is only worth a warning.
+const logEmailProblem = process.env.NODE_ENV === "production" ? console.error : console.warn;
+
 type AccountEmailInput = {
   to: string;
   subject: string;
@@ -215,7 +218,7 @@ export async function sendAccountEmail(input: AccountEmailInput): Promise<Accoun
       if (!response.ok) {
         const errorSummary = responseJson?.message || responseText || "Unknown provider error";
 
-        console.error("[account-email] send failed", {
+        logEmailProblem("[account-email] send failed", {
           ...sendLogPayload,
           status: response.status,
           errorSummary,
@@ -245,7 +248,7 @@ export async function sendAccountEmail(input: AccountEmailInput): Promise<Accoun
 
       const causeSummary = error instanceof Error ? error.message : "Unknown fetch failure";
 
-      console.error("[account-email] send failed", {
+      logEmailProblem("[account-email] send failed", {
         ...sendLogPayload,
         errorSummary: causeSummary,
       });

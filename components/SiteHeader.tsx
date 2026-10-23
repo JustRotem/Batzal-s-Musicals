@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { getAccountUrl, isAccountMode } from "@/lib/app-mode";
+import { getAccountUrl, getMusicalsUrl, isAccountMode } from "@/lib/app-mode";
 import { getAppTitle } from "@/lib/app-config";
 import { getCurrentUser } from "@/lib/auth";
 import { getCurrentTheme } from "@/lib/theme-server";
+import AccountBrandLink from "@/components/AccountBrandLink";
 import AppsMenu from "@/components/AppsMenu";
 import BatzalAccountMenu from "@/components/BatzalAccountMenu";
 import BatzalLogo from "@/components/BatzalLogo";
@@ -23,6 +24,15 @@ export default async function SiteHeader({
   const accountSite = isAccountMode();
   const accountUrl = getAccountUrl();
 
+  // Asking for editing access is a window in the account menu; this says what the menu should offer
+  const editorRequest: "available" | "pending" | null = !user
+    ? null
+    : canRequestEditorAccess(user)
+      ? "available"
+      : user.role === "user" && user.status === "pending"
+        ? "pending"
+        : null;
+
   // Entries that exist only on the musicals site.
   const extras: Array<{ href: string; label: string; badge?: number }> = [];
 
@@ -38,28 +48,23 @@ export default async function SiteHeader({
         badge: summary?.open ?? 0,
       });
     }
-
-    if (canRequestEditorAccess(user)) {
-      extras.push({
-        href: `${accountUrl}/profile#account-access-summary`,
-        label: t.header.requestEditorAccess,
-      });
-    } else if (user.role === "user" && user.status === "pending") {
-      extras.push({
-        href: `${accountUrl}/profile#account-access-summary`,
-        label: t.header.editorRequestPending,
-      });
-    }
   }
 
   return (
     <header className="site-header bz-bar">
       <div className="site-header-inner">
         <div className="site-header-section site-header-brand">
-          <Link href="/" className="bz-brand" aria-label={t.header.homeAria}>
-            <BatzalLogo />
-            <span>Batzal</span>
-          </Link>
+          {accountSite ? (
+            <AccountBrandLink ariaLabel={t.header.homeAria} fallbackHref={getMusicalsUrl()}>
+              <BatzalLogo />
+              <span>Batzal</span>
+            </AccountBrandLink>
+          ) : (
+            <Link href="/" className="bz-brand" aria-label={t.header.homeAria}>
+              <BatzalLogo />
+              <span>Batzal</span>
+            </Link>
+          )}
           <span className="bz-sep" aria-hidden="true" />
           <span className="bz-app">{getAppTitle(language)}</span>
         </div>
@@ -89,6 +94,7 @@ export default async function SiteHeader({
             accountUrl={accountUrl}
             signInHref={accountSite ? "/auth/google/start" : "/auth/account/start"}
             extras={extras}
+            editorRequest={editorRequest}
           />
         </div>
       </div>

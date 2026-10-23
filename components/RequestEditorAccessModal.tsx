@@ -1,113 +1,100 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import ModalCloseButton from "@/components/ModalCloseButton";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import AuthSubmitButton from "@/components/AuthSubmitButton";
+import ModalCloseButton from "@/components/ModalCloseButton";
+import { submitEditorRequestAction } from "@/app/profile/actions";
 import { getTranslations, type AppLanguage } from "@/lib/i18n";
 
-type RequestEditorAccessModalProps = {
-  action: (formData: FormData) => void | Promise<void>;
-  section?: "profile" | "permissions" | "security";
-  language?: AppLanguage;
-};
-
+// A floating window, opened from the header menu. Closes with the X, a click outside, or Escape.
 export default function RequestEditorAccessModal({
-  action,
-  section = "profile",
   language = "he",
-}: RequestEditorAccessModalProps) {
+  onClose,
+  onSent,
+}: {
+  language?: AppLanguage;
+  onClose: () => void;
+  onSent: () => void;
+}) {
   const t = getTranslations(language);
-  const [mounted, setMounted] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [result, setResult] = useState<"sent" | "pending" | "unavailable" | null>(null);
+  const [isSending, startSending] = useTransition();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  if (typeof document === "undefined") {
+    return null;
+  }
 
-  useEffect(() => {
-    if (!open) {
-      return;
-    }
+  function submit() {
+    startSending(async () => {
+      const response = await submitEditorRequestAction(message);
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+      setResult(response.status);
 
-    function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setOpen(false);
+      if (response.status !== "unavailable") {
+        onSent();
       }
-    }
+    });
+  }
 
-    document.addEventListener("keydown", handleEscape);
+  const done = result === "sent" || result === "pending";
 
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.removeEventListener("keydown", handleEscape);
-    };
-  }, [open]);
-
-  return (
-    <>
-      <button
-        type="button"
-        className="button-primary"
-        onClick={() => setOpen(true)}
+  return createPortal(
+    <div className="confirm-modal-overlay" onClick={onClose}>
+      <div
+        className="card confirm-modal-card report-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="editor-request-title"
+        onClick={(event) => event.stopPropagation()}
       >
-        {t.profile.editorRequestButton}
-      </button>
+        <ModalCloseButton label={language === "he" ? "סגור" : "Close"} onClick={onClose} disabled={isSending} />
+        <div className="confirm-modal-copy">
+          <h2 id="editor-request-title" className="panel-title">
+            {t.editorRequest.title}
+          </h2>
+          <p className="viewer-text">
+            {done
+              ? language === "he"
+                ? "הבקשה נשלחה. נעדכן אותך בהתראה כשיהיה מענה."
+                : "Your request was sent. You will get a notification when it is answered."
+              : t.editorRequest.description}
+          </p>
+        </div>
 
-      {mounted && open
-        ? createPortal(
-            <div className="crop-modal-overlay" onClick={() => setOpen(false)}>
-              <div
-                className="card crop-modal-card profile-request-modal"
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="editor-request-title"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <ModalCloseButton onClick={() => setOpen(false)} />
-                <div className="crop-modal-header">
-                  <div>
-                    <h2 id="editor-request-title" className="panel-title">
-                      {t.editorRequest.title}
-                    </h2>
-                    <p className="show-meta" style={{ marginTop: 0 }}>
-                      {t.editorRequest.description}
-                    </p>
-                  </div>
-                </div>
+        {done ? null : (
+          <>
+            <div className="field">
+              <label className="field-label" htmlFor="editor-request-message">
+                {t.editorRequest.label}
+              </label>
+              <textarea
+                id="editor-request-message"
+                className="textarea"
+                value={message}
+                maxLength={1000}
+                onChange={(event) => setMessage(event.currentTarget.value)}
+                placeholder={t.editorRequest.placeholder}
+                disabled={isSending}
+              />
+              <p className="profile-request-hint">{t.editorRequest.hint}</p>
+            </div>
 
-                <form action={action} className="form-grid profile-request-form" style={{ marginTop: 0 }}>
-                  <input type="hidden" name="section" value={section} />
-                  <div className="field">
-                    <label className="field-label" htmlFor="editor-request-message">
-                      {t.editorRequest.label}
-                    </label>
-                    <textarea
-                      id="editor-request-message"
-                      className="textarea"
-                      name="requestMessage"
-                      placeholder={t.editorRequest.placeholder}
-                    />
-                    <p className="profile-request-hint">
-                      {t.editorRequest.hint}
-                    </p>
-                  </div>
+            {result === "unavailable" ? (
+              <p className="form-message error" role="alert">
+                {language === "he" ? "אי אפשר לשלוח בקשה כרגע." : "A request cannot be sent right now."}
+              </p>
+            ) : null}
 
-                  <div className="button-row profile-action-row" style={{ marginTop: 0 }}>
-                    <AuthSubmitButton
-                      idleLabel={t.editorRequest.submit}
-                      pendingLabel={t.editorRequest.pending}
-                    />
-                  </div>
-                </form>
-              </div>
-            </div>,
-            document.body,
-          )
-        : null}
-    </>
+            <div className="button-row confirm-modal-actions">
+              <button type="button" className="button-primary" disabled={isSending} onClick={submit}>
+                {isSending ? t.editorRequest.pending : t.editorRequest.submit}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>,
+    document.body,
   );
 }

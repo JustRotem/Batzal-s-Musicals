@@ -38,7 +38,7 @@ export default async function RootLayout({
   return (
     <html lang={language} dir={direction} data-theme={theme ?? undefined}>
       <head>
-        <link rel="stylesheet" href={`${process.env.BATZAL_STATIC_URL ?? "https://static.batzal.net"}/batzal-bar.css?v=11`} />
+        <link rel="stylesheet" href={`${process.env.BATZAL_STATIC_URL ?? "https://static.batzal.net"}/batzal-bar.css?v=12`} />
       </head>
       <body>
         <SiteHeader language={language} />

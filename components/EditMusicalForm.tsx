@@ -228,23 +228,26 @@ export default function EditMusicalForm({
             {t.publishTextEdit}
           </p>
         </div>
-        <label className="toggle-field">
-          <input
-            type="checkbox"
-            name="isPublished"
-            defaultChecked={initialValues.isPublished}
-            className="toggle-input sr-only"
-          />
-          <span className="toggle-control" aria-hidden="true">
-            <span className="toggle-thumb" />
-          </span>
-          <span className="toggle-label">{t.keepPublished}</span>
-        </label>
 
         <div className="button-row content-editor-actions" style={{ marginTop: 0 }}>
           <NewMusicalSubmitButton
-            idleLabel={t.saveChanges}
-            pendingLabel={t.savingChanges}
+            idleLabel={musical.isPublished ? t.saveChanges : language === "he" ? "פרסם" : "Publish"}
+            pendingLabel={musical.isPublished ? t.savingChanges : language === "he" ? "מפרסם..." : "Publishing..."}
+          />
+          <NewMusicalSubmitButton
+            name="intent"
+            value="draft"
+            variant="secondary"
+            idleLabel={
+              musical.isPublished
+                ? language === "he"
+                  ? "העבר לטיוטה"
+                  : "Move to drafts"
+                : language === "he"
+                  ? "שמור כטיוטה"
+                  : "Save as draft"
+            }
+            pendingLabel={language === "he" ? "שומר..." : "Saving..."}
           />
           <Link href={`/library/${encodeURIComponent(musical.slug)}`} className="button-secondary">
             {t.cancelChanges}

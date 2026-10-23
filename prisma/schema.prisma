@@ -45,6 +45,8 @@ model User {
   updatedClips      Clip[]    @relation("ClipUpdatedBy")
   comments          Comment[]
   moderatedComments Comment[] @relation("CommentModeratedBy")
+  commentReactions  CommentReaction[]
+  notifications     Notification[]
   submittedCommentReports CommentReport[] @relation("CommentReportReporter")
   reviewedCommentReports  CommentReport[] @relation("CommentReportReviewedBy")
 }
@@ -238,6 +240,9 @@ model Clip {
 
   sortOrder Int @default(0)
 
+  // A draft is visible only to people who manage the library
+  isDraft   Boolean @default(false)
+
   musicalId String
   musical   Musical @relation(fields: [musicalId], references: [id], onDelete: Cascade)
 
@@ -269,6 +274,7 @@ model Comment {
   moderatedAt DateTime?
 
   moderatedById String?
+  reactions     CommentReaction[]
   moderatedBy   User? @relation("CommentModeratedBy", fields: [moderatedById], references: [id], onDelete: SetNull)
   reports       CommentReport[]
 
@@ -304,4 +310,40 @@ model CommentReport {
   @@index([commentId, status, createdAt])
   @@index([reporterUserId, status, createdAt])
   @@index([reviewedById])
+}
+
+// One person can add each emoji to a comment once; adding it again removes it.
+model CommentReaction {
+  id        String   @id @default(cuid())
+  emoji     String
+
+  commentId String
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@unique([commentId, userId, emoji])
+  @@index([commentId])
+}
+
+// A message for one person, shown in the bell of every Batzal site. Both languages are stored; the reader gets theirs.
+model Notification {
+  id        String    @id @default(cuid())
+  kind      String
+  titleHe   String
+  titleEn   String
+  bodyHe    String?
+  bodyEn    String?
+  href      String?
+  createdAt DateTime  @default(now())
+  readAt    DateTime?
+
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+  @@index([userId, createdAt])
 }

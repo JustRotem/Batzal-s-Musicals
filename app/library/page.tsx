@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAppTitle } from "@/lib/app-config";
+import { db } from "@/lib/db";
 import { findVisibleMusicals } from "@/lib/musicals";
 import MusicalArtwork from "@/components/MusicalArtwork";
 import { getMusicalDescriptionText } from "@/lib/musical-description";
@@ -68,8 +69,12 @@ export default async function MusicalsPage(props: { searchParams?: Promise<{ cat
       posterAspect: true,
       thumbnailUrl: true,
       categoryId: true,
+      isPublished: true,
     },
   });
+  const draftCount = canManage
+    ? (await db.musical.count({ where: { isPublished: false } })) + (await db.clip.count({ where: { isDraft: true } }))
+    : 0;
   const categories = await listCategories();
   const presentCategories = categories.filter((category) => allItems.some((item) => item.categoryId === category.id));
   const categoryById = new Map(categories.map((category) => [category.id, category]));
@@ -89,6 +94,9 @@ export default async function MusicalsPage(props: { searchParams?: Promise<{ cat
             <div className="button-row" style={{ marginTop: 12 }}>
               <Link href="/admin/library/new" className="button-primary">
                 {copy.addMusical}
+              </Link>
+              <Link href="/admin/library/drafts" className="button-secondary">
+                {language === "he" ? "טיוטות" : "Drafts"}{draftCount > 0 ? ` (${draftCount})` : ""}
               </Link>
               <Link href="/admin/library/order" className="button-secondary">
                 {copy.editOrder}
@@ -179,7 +187,10 @@ export default async function MusicalsPage(props: { searchParams?: Promise<{ cat
                       />
                     </div>
                     <div className="musical-card-body">
-                      <span className="musical-card-title">{musical.title}</span>
+                      <span className="musical-card-title">
+                        {musical.title}
+                        {!musical.isPublished ? <span className="draft-badge">{language === "he" ? "טיוטה" : "Draft"}</span> : null}
+                      </span>
                       <span className="musical-card-year">
                         {[
                           musical.categoryId && categoryById.get(musical.categoryId)

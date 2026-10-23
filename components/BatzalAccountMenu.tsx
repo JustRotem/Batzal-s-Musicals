@@ -1,10 +1,11 @@
 "use client";
 
-import { startTransition, useEffect, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { logoutAction } from "@/app/auth/logout/actions";
 import { setPreferredLanguageAction, setPreferredThemeAction } from "@/app/actions";
 import { getRankInfo, RANK_LEVELS } from "@/lib/ranks";
+import RequestEditorAccessModal from "@/components/RequestEditorAccessModal";
 import type { AppLanguage } from "@/lib/i18n";
 
 // The sign-in button, rank chip, avatar button and menu of the shared Batzal bar. It renders the same markup as the
@@ -24,6 +25,8 @@ type BatzalAccountMenuProps = {
   signInHref: string;
   // Entries that exist only on this site (shown after the shared ones).
   extras?: Array<{ href: string; label: string; badge?: number }>;
+  // Whether the menu offers asking for editing access (a floating window)
+  editorRequest?: "available" | "pending" | null;
 };
 
 const TEXT = {
@@ -40,6 +43,11 @@ const TEXT = {
     confirmText: "תתנתק מהאתר הזה. אפשר להתחבר שוב בכל רגע.",
     cancel: "ביטול",
     level: "דרגה",
+    editorRequest: "בקשת גישת עריכה",
+    editorRequestPending: "בקשת עריכה ממתינה לאישור",
+    notifications: "התראות",
+    markAll: "סמן הכל כנקרא",
+    noNotifications: "אין התראות חדשות",
   },
   en: {
     signIn: "Sign in",
@@ -54,6 +62,11 @@ const TEXT = {
     confirmText: "You will be signed out of this site. You can sign in again at any time.",
     cancel: "Cancel",
     level: "Rank",
+    editorRequest: "Request editing access",
+    editorRequestPending: "Editing request awaiting approval",
+    notifications: "Notifications",
+    markAll: "Mark all as read",
+    noNotifications: "No new notifications",
   },
 } as const;
 
@@ -165,6 +178,135 @@ function PreferenceRows({
   );
 }
 
+type NotificationItem = { id: string; title: string; body: string | null; href: string | null; createdAt: string; read: boolean };
+
+function timeAgo(iso: string, language: AppLanguage) {
+  const seconds = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
+  if (language === "he") {
+    if (seconds < 60) return "הרגע";
+    if (seconds < 3600) return `לפני ${Math.round(seconds / 60)} דק׳`;
+    if (seconds < 86400) return `לפני ${Math.round(seconds / 3600)} שע׳`;
+
+    return `לפני ${Math.round(seconds / 86400)} ימים`;
+  }
+
+  const formatter = new Intl.RelativeTimeFormat(language, { numeric: "auto" });
+
+  if (seconds < 3600) return formatter.format(-Math.max(1, Math.round(seconds / 60)), "minute");
+  if (seconds < 86400) return formatter.format(-Math.round(seconds / 3600), "hour");
+
+  return formatter.format(-Math.round(seconds / 86400), "day");
+}
+
+// The same notifications on every Batzal site: they live at the account site.
+function NotificationBell({ accountUrl, language }: { accountUrl: string; language: AppLanguage }) {
+  const t = TEXT[language];
+  const [open, setOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
+  const [items, setItems] = useState<NotificationItem[]>([]);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  const load = useCallback(async () => {
+    try {
+      const response = await fetch(`${accountUrl}/api/notifications`, { credentials: "include" });
+
+      if (!response.ok) return;
+
+      const data = (await response.json()) as { unread: number; items: NotificationItem[] };
+      setUnread(data.unread);
+      setItems(data.items);
+    } catch {
+      // the bell just stays as it was
+    }
+  }, [accountUrl]);
+
+  const markRead = useCallback(
+    async (ids: string[] | "all") => {
+      try {
+        await fetch(`${accountUrl}/api/notifications`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ read: ids }),
+        });
+      } catch {
+        // ignore
+      }
+
+      void load();
+    },
+    [accountUrl, load],
+  );
+
+  useEffect(() => {
+    void load();
+    const timer = window.setInterval(() => void load(), 60000);
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [load]);
+
+  useDismiss(open, () => setOpen(false), wrapRef);
+
+  return (
+    <div className="bz-bellwrap" ref={wrapRef}>
+      <button
+        type="button"
+        className="bz-bell"
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-label={t.notifications}
+        title={t.notifications}
+        onClick={() => {
+          setOpen((value) => !value);
+          void load();
+        }}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M6 9a6 6 0 1112 0c0 5 2 6.5 2 6.5H4S6 14 6 9z" />
+          <path d="M10 19a2 2 0 004 0" />
+        </svg>
+        {unread > 0 ? <span className="bz-bell-badge">{unread > 9 ? "9+" : unread}</span> : null}
+      </button>
+      {open ? (
+        <div className="bz-notif">
+          <div className="bz-notif-head">
+            <strong>{t.notifications}</strong>
+            {unread > 0 ? (
+              <button type="button" className="bz-notif-all" onClick={() => void markRead("all")}>
+                {t.markAll}
+              </button>
+            ) : null}
+          </div>
+          <div className="bz-notif-list">
+            {items.length === 0 ? <div className="bz-notif-empty">{t.noNotifications}</div> : null}
+            {items.map((item) => (
+              <a
+                key={item.id}
+                className={`bz-notif-item ${item.read ? "" : "unread"}`}
+                href={item.href ?? "#"}
+                onClick={() => {
+                  if (!item.read) void markRead([item.id]);
+                }}
+              >
+                <strong>{item.title}</strong>
+                {item.body ? <span>{item.body}</span> : null}
+                <small>{timeAgo(item.createdAt, language)}</small>
+              </a>
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function BatzalAccountMenu({
   user,
   theme,
@@ -172,11 +314,14 @@ export default function BatzalAccountMenu({
   accountUrl,
   signInHref,
   extras = [],
+  editorRequest = null,
 }: BatzalAccountMenuProps) {
   const t = TEXT[language];
   const [open, setOpen] = useState(false);
   const [popOpen, setPopOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
+  const [requestOpen, setRequestOpen] = useState(false);
+  const [requestSent, setRequestSent] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const signInRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -265,7 +410,8 @@ export default function BatzalAccountMenu({
               {t.google}
             </a>
             <hr />
-            <PreferenceRows t={t} language={language} theme={theme} redirectTo={redirectTo} />
+  
+          <PreferenceRows t={t} language={language} theme={theme} redirectTo={redirectTo} />
           </div>
         ) : null}
       </div>
@@ -279,6 +425,7 @@ export default function BatzalAccountMenu({
 
   return (
     <div className="bz-acct" ref={wrapRef}>
+      <NotificationBell accountUrl={accountUrl} language={language} />
       <div className="bz-rankwrap">
         <button type="button" className="bz-rank">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -330,6 +477,20 @@ export default function BatzalAccountMenu({
             {t.account}
           </a>
 
+          {editorRequest ? (
+            <button
+              type="button"
+              role="menuitem"
+              disabled={editorRequest === "pending" || requestSent}
+              onClick={() => {
+                setOpen(false);
+                setRequestOpen(true);
+              }}
+            >
+              {editorRequest === "pending" || requestSent ? t.editorRequestPending : t.editorRequest}
+            </button>
+          ) : null}
+
           <PreferenceRows t={t} language={language} theme={theme} redirectTo={redirectTo} />
 
           {extras.map((item) => (
@@ -350,6 +511,14 @@ export default function BatzalAccountMenu({
             {t.signOut}
           </button>
         </div>
+      ) : null}
+
+      {requestOpen ? (
+        <RequestEditorAccessModal
+          language={language}
+          onClose={() => setRequestOpen(false)}
+          onSent={() => setRequestSent(true)}
+        />
       ) : null}
 
       {confirming ? (

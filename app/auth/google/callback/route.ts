@@ -7,17 +7,17 @@ import {
   toGoogleAppUrl,
 } from "@/lib/google-auth";
 import { LANGUAGE_COOKIE_NAME } from "@/lib/i18n";
-import { LOGIN_NEXT_COOKIE, sanitizeNextPath } from "@/lib/login-next";
+import { ACCOUNT_LOGIN_NEXT_COOKIE, sanitizeNextPath } from "@/lib/login-next";
 
 export async function GET(request: NextRequest) {
   const expectedState = request.cookies.get(GOOGLE_OAUTH_STATE_COOKIE)?.value ?? null;
-  const next = sanitizeNextPath(request.cookies.get(LOGIN_NEXT_COOKIE)?.value);
+  const next = sanitizeNextPath(request.cookies.get(ACCOUNT_LOGIN_NEXT_COOKIE)?.value);
   const googleError = request.nextUrl.searchParams.get("error");
   const state = request.nextUrl.searchParams.get("state");
   const code = request.nextUrl.searchParams.get("code");
 
   const clearCookies = (response: NextResponse) => {
-    for (const name of [GOOGLE_OAUTH_STATE_COOKIE, LOGIN_NEXT_COOKIE]) {
+    for (const name of [GOOGLE_OAUTH_STATE_COOKIE, ACCOUNT_LOGIN_NEXT_COOKIE]) {
       response.cookies.set(name, "", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",

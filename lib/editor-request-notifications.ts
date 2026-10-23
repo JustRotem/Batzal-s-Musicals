@@ -5,6 +5,9 @@ import { DEFAULT_APP_TITLE  } from "@/lib/app-config";
 import { PERMISSIONS } from "@/lib/permissions";
 import { UserRole } from "@prisma/client";
 
+// A mail that cannot be sent is a problem in production; locally (no real key) it is only worth a warning.
+const logEmailProblem = process.env.NODE_ENV === "production" ? console.error : console.warn;
+
 type RequestUser = {
   id: string;
   firstName: string;
@@ -136,7 +139,7 @@ export async function notifyAdminsAboutEditorRequest(requestUser: RequestUser) {
           template,
         });
       } catch (error) {
-        console.error("[editor-request-notify] admin notification failed", {
+        logEmailProblem("[editor-request-notify] admin notification failed", {
           recipientId: recipient.id,
           requesterId: requestUser.id,
           reason:

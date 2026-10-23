@@ -56,30 +56,23 @@ function MusicalSearchRow({
   return (
     <Link
       href={`/library/${musical.slug}`}
-      className={`header-search-result ${active ? "is-active" : ""}`}
+      className={`header-search-result ${active ? "is-active" : ""} ${musical.imagePath || musical.thumbnailUrl ? "" : "no-art"}`}
     >
-      <div className="header-search-result-artwork">
-        {musical.imagePath || musical.thumbnailUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
+      {musical.imagePath || musical.thumbnailUrl ? (
+        <div className="header-search-result-artwork">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={musical.imagePath || musical.thumbnailUrl || ""}
             alt={musical.title}
             className="header-search-result-image"
           />
-        ) : (
-          <div className="header-search-result-fallback" aria-hidden="true">
-            {musical.title.slice(0, 2)}
-          </div>
-        )}
-      </div>
+        </div>
+      ) : null}
       <div className="header-search-result-body">
         <div className="header-search-result-title" dir="auto">
           <HighlightedText text={musical.title} query={query} />
         </div>
-        <div className="header-search-result-meta" dir="auto">
-          {musical.year ? `${musical.year} • ` : null}
-          <HighlightedText text={musical.snippet} query={query} />
-        </div>
+        {musical.year ? <div className="header-search-result-meta">{musical.year}</div> : null}
       </div>
     </Link>
   );
@@ -101,20 +94,14 @@ function ClipSearchRow({
   return (
     <Link
       href={`/library/${clip.musical.slug}#clip-${clip.id}`}
-      className={`header-search-result ${active ? "is-active" : ""}`}
+      className={`header-search-result no-art ${active ? "is-active" : ""}`}
     >
-      <div className="header-search-result-artwork header-search-result-artwork-clip">
-        <span className="header-search-chip">{t.header.clipChip}</span>
-      </div>
       <div className="header-search-result-body">
         <div className="header-search-result-title" dir="auto">
           <HighlightedText text={clip.title} query={query} />
         </div>
-        <div className="header-search-result-parent" dir="auto">
-          {t.header.clipFrom} <HighlightedText text={clip.musical.title} query={query} />
-        </div>
         <div className="header-search-result-meta" dir="auto">
-          <HighlightedText text={clip.snippet} query={query} />
+          {clip.musical.title}
         </div>
       </div>
     </Link>

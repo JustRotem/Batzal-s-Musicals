@@ -1,13 +1,10 @@
 import { requireUser } from "@/lib/auth";
 import {
-  requestEditorAccessAction,
   updateUsernameAction,
 } from "@/app/profile/actions";
 import { setPreferredLanguageAction, setPreferredThemeAction } from "@/app/actions";
-import { canRequestEditorAccess } from "@/lib/permissions";
 import FormSubmitButton from "@/components/FormSubmitButton";
 import UserAvatarUploadField from "@/components/UserAvatarUploadField";
-import RequestEditorAccessModal from "@/components/RequestEditorAccessModal";
 import { getCurrentLanguage } from "@/lib/i18n-server";
 import { getCurrentTheme } from "@/lib/theme-server";
 import {
@@ -118,7 +115,6 @@ export default async function ProfilePage(props: ProfilePageProps) {
     ? SUCCESS_MESSAGES[language][searchParams.success] ?? null
     : null;
   const errorMessage = searchParams?.error ? ERROR_MESSAGES[language][searchParams.error] ?? null : null;
-  const canRequestEditor = canRequestEditorAccess(user);
 
   return (
     <main className="page-shell">
@@ -250,24 +246,6 @@ export default async function ProfilePage(props: ProfilePageProps) {
               </div>
             </section>
 
-            {canRequestEditor ? (
-              <section className="profile-panel" id="account-access-summary">
-                <div className="profile-panel-heading">
-                  <div>
-                    <h2 className="profile-panel-title">{copy.requestTitle}</h2>
-                    <p className="profile-access-text">{copy.requestHint}</p>
-                  </div>
-                </div>
-
-                <div className="button-row" style={{ marginTop: 0 }}>
-                  <RequestEditorAccessModal
-                    action={requestEditorAccessAction}
-                    section="profile"
-                    language={language}
-                  />
-                </div>
-              </section>
-            ) : null}
           </div>
         </section>
       </div>

@@ -6,6 +6,8 @@ import DeleteMusicalModal from "@/components/DeleteMusicalModal";
 import DeleteClipModal from "@/components/DeleteClipModal";
 import MusicalArtwork from "@/components/MusicalArtwork";
 import ScrollToTopOnLoad from "@/components/ScrollToTopOnLoad";
+import ScrollToClipOnHash from "@/components/ScrollToClipOnHash";
+import { getCategoryLabel } from "@/lib/library-categories";
 import ClipCommentsSection from "@/components/ClipCommentsSection";
 import { getCurrentUser } from "@/lib/auth";
 import {
@@ -57,7 +59,7 @@ function getMusicalPageCopy(locale: "he" | "en") {
 
   return {
     backToAll: "חזרה לכל הפריטים",
-    clipsCount: (count: number) => `${count} קטעים`,
+    clipsCount: (count: number) => (count === 1 ? "קטע אחד" : `${count} קטעים`),
     createdBy: "נוצר על ידי",
     updatedBy: "עודכן לאחרונה על ידי",
     unknownUser: "לא ידוע",
@@ -97,6 +99,7 @@ export default async function MusicalPage({ params, searchParams }: PageProps) {
   const musical = await db.musical.findFirst({
     where: { slug: { in: slugCandidates } },
     include: {
+      category: true,
       createdBy: {
         select: {
           id: true,
@@ -122,7 +125,7 @@ export default async function MusicalPage({ params, searchParams }: PageProps) {
 
   const encodedMusicalSlug = encodeURIComponent(musical.slug);
   const clips = await db.clip.findMany({
-    where: { musicalId: musical.id },
+    where: { musicalId: musical.id, ...(canViewUnpublished ? {} : { isDraft: false }) },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
     include: {
       comments: {
@@ -133,6 +136,7 @@ export default async function MusicalPage({ params, searchParams }: PageProps) {
           createdAt: "desc",
         },
         include: {
+          reactions: { select: { userId: true, emoji: true, user: { select: { username: true } } }, orderBy: { createdAt: "asc" } },
           user: {
             select: {
               id: true,
@@ -165,6 +169,7 @@ export default async function MusicalPage({ params, searchParams }: PageProps) {
   return (
     <main className="page-shell" id="musical-page-top">
       {resolvedSearchParams?.updated === "1" ? <ScrollToTopOnLoad /> : null}
+      <ScrollToClipOnHash />
       <div className="orb one" />
       <div className="orb two" />
 
@@ -190,6 +195,9 @@ export default async function MusicalPage({ params, searchParams }: PageProps) {
                 </h1>
 
                 <div className="tag-row musical-hero-tags">
+                  {musical.category ? (
+                    <div className="tag">{getCategoryLabel(musical.category, locale)}</div>
+                  ) : null}
                   {musical.year ? <div className="tag">📅 {musical.year}</div> : null}
                   <div className="tag">🎞 {copy.clipsCount(clips.length)}</div>
                 </div>
@@ -287,7 +295,7 @@ export default async function MusicalPage({ params, searchParams }: PageProps) {
             ) : (
               clips.map((clip) => {
                 const renderedClipDescription = sanitizeRichTextContent(clip.description);
-                const commentViews = buildClipCommentViews(clip.comments, locale);
+                const commentViews = buildClipCommentViews(clip.comments, locale, currentUser?.id ?? null);
                 const titleText = clip.title ?? "";
                 const hasHebrew = /[\u0590-\u05FF]/.test(titleText);
                 const hasLatin = /[A-Za-z]/.test(titleText);
@@ -299,6 +307,7 @@ export default async function MusicalPage({ params, searchParams }: PageProps) {
                       <div className="show-name musical-clip-title" dir={titleDir}>
                         {titleText}
                       </div>
+                      {clip.isDraft ? <span className="draft-badge">{locale === "he" ? "טיוטה" : "Draft"}</span> : null}
                     </div>
 
                     {renderedClipDescription ? (

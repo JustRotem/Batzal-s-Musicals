@@ -3,10 +3,10 @@ import Link from "next/link";
 import { getAppTitle } from "@/lib/app-config";
 import SearchFiltersBar from "@/components/SearchFiltersBar";
 import HighlightedText from "@/components/HighlightedText";
-import MusicalArtwork from "@/components/MusicalArtwork";
 import { formatMessage, getTranslations } from "@/lib/i18n";
 import { getCurrentLanguage } from "@/lib/i18n-server";
 import { searchContent } from "@/lib/search";
+import { findVisibleMusicals } from "@/lib/musicals";
 
 export async function generateMetadata(): Promise<Metadata> {
   const language = await getCurrentLanguage();
@@ -29,10 +29,6 @@ type SearchPageProps = {
   }>;
 };
 
-function getClipSourceLabel(sourceType: "youtube" | "upload", uploadLabel: string) {
-  return sourceType === "youtube" ? "YouTube" : uploadLabel;
-}
-
 export default async function SearchPage(props: SearchPageProps) {
   const language = await getCurrentLanguage();
   const t = getTranslations(language);
@@ -44,6 +40,24 @@ export default async function SearchPage(props: SearchPageProps) {
   const hasQuery = Boolean(results.query);
   const hasResults = results.musicals.length > 0 || results.clips.length > 0;
   const totalResults = results.musicals.length + results.clips.length;
+  const recent = hasQuery
+    ? []
+    : await findVisibleMusicals({
+        orderBy: [{ createdAt: "desc" }],
+        take: 3,
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          description: true,
+          year: true,
+          imagePath: true,
+          posterDisplayMode: true,
+          posterAspect: true,
+          thumbnailUrl: true,
+          emoji: true,
+        },
+      });
 
   return (
     <main className="page-shell">
@@ -71,10 +85,40 @@ export default async function SearchPage(props: SearchPageProps) {
           </div>
 
           {!hasQuery ? (
-            <div className="link-card search-empty-state">
-              <div className="show-name">{t.search.startTitle}</div>
-              <div className="show-meta">{t.search.startText}</div>
-            </div>
+            <section className="search-results-section search-recent">
+              <div className="search-results-heading">
+                <h2 className="panel-title" style={{ marginBottom: 0 }}>
+                  {language === "he" ? "הוספו לאחרונה" : "Recently added"}
+                </h2>
+              </div>
+              <div className="search-list">
+                {recent.map((musical) => {
+                  const picture = musical.imagePath || musical.thumbnailUrl;
+
+                  return (
+                    <Link
+                      key={musical.id}
+                      href={`/library/${musical.slug}`}
+                      className={`search-row ${picture ? "" : "no-art"}`}
+                    >
+                      {picture ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={picture} alt="" className="search-row-image" />
+                      ) : null}
+                      <div className="search-row-body">
+                        <div className="search-row-title" dir="auto">
+                          {musical.title}
+                        </div>
+                        <div className="search-row-meta">
+                          <span className="search-result-type">{t.search.musicalType}</span>
+                          {musical.year ? <span>{musical.year}</span> : null}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
           ) : !hasResults ? (
             <div className="link-card search-empty-state">
               <div className="show-name">{formatMessage(t.search.noResultsFor, { query: rawQuery })}</div>
@@ -90,100 +134,58 @@ export default async function SearchPage(props: SearchPageProps) {
                 {results.year ? ` ${formatMessage(t.search.resultsSummaryYear, { year: results.year })}` : ""}
               </div>
 
-              <section className="search-results-section">
-                <div className="search-results-heading">
-                  <h2 className="panel-title" style={{ marginBottom: 0 }}>
-                    {t.search.musicals}
-                  </h2>
-                  <span className="admin-role-permission-count">{results.musicals.length}</span>
-                </div>
+              <div className="search-list">
+                {results.musicals.map((musical) => {
+                  const picture = musical.imagePath || musical.thumbnailUrl;
 
-                {results.musicals.length === 0 ? (
-                  <div className="link-card search-section-empty">
-                    {t.search.noMusicalMatches}
-                  </div>
-                ) : (
-                  <div className="list">
-                    {results.musicals.map((musical) => (
-                      <Link
-                        key={musical.id}
-                        href={`/library/${musical.slug}`}
-                        className="show-card search-result-card"
-                      >
-                        <div className="search-result-artwork">
-                          <MusicalArtwork
-                            imagePath={musical.imagePath}
-                            posterDisplayMode={musical.posterDisplayMode}
-                            posterAspect={musical.posterAspect}
-                            title={musical.title}
-                            thumbnailUrl={musical.thumbnailUrl}
-                            emoji={musical.emoji}
-                          />
-                          </div>
-                        <div className="search-result-body">
-                          <div className="search-result-meta">
-                            <span className="search-result-type">{t.search.musicalType}</span>
-                            {musical.year ? (
-                              <span className="show-meta">{musical.year}</span>
-                            ) : null}
-                          </div>
-                          <div className="show-name" dir="auto">
-                            <HighlightedText text={musical.title} query={results.query} />
-                          </div>
-                          <p className="search-result-snippet" dir="auto">
-                            <HighlightedText text={musical.snippet} query={results.query} />
-                          </p>
+                  return (
+                    <Link
+                      key={`item-${musical.id}`}
+                      href={`/library/${musical.slug}`}
+                      className={`search-row ${picture ? "" : "no-art"}`}
+                    >
+                      {picture ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={picture} alt="" className="search-row-image" />
+                      ) : null}
+                      <div className="search-row-body">
+                        <div className="search-row-title" dir="auto">
+                          <HighlightedText text={musical.title} query={results.query} />
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              <section className="search-results-section">
-                <div className="search-results-heading">
-                  <h2 className="panel-title" style={{ marginBottom: 0 }}>
-                    {t.search.clips}
-                  </h2>
-                  <span className="admin-role-permission-count">{results.clips.length}</span>
-                </div>
-
-                {results.clips.length === 0 ? (
-                  <div className="link-card search-section-empty">
-                    {t.search.noClipMatches}
-                  </div>
-                ) : (
-                  <div className="list">
-                    {results.clips.map((clip) => (
-                      <Link
-                        key={clip.id}
-                        href={`/library/${clip.musical.slug}#clip-${clip.id}`}
-                        className="show-card search-result-card"
-                      >
-                        <div className="search-result-body">
-                          <div className="search-result-meta">
-                            <span className="search-result-type clip">{t.search.clipType}</span>
-                            <span className="show-meta">
-                              {getClipSourceLabel(clip.sourceType, t.search.sourceUpload)}
-                            </span>
-                          </div>
-                          <div className="show-name" dir="auto">
-                            <HighlightedText text={clip.title} query={results.query} />
-                          </div>
-                          <div className="search-result-parent" dir="auto">
-                            {t.search.from}{" "}
-                            <HighlightedText text={clip.musical.title} query={results.query} />
-                            {clip.musical.year ? ` • ${clip.musical.year}` : ""}
-                          </div>
-                          <p className="search-result-snippet" dir="auto">
-                            <HighlightedText text={clip.snippet} query={results.query} />
-                          </p>
+                        <div className="search-row-meta">
+                          <span className="search-result-type">{t.search.musicalType}</span>
+                          {musical.year ? <span>{musical.year}</span> : null}
                         </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </section>
+                        {musical.descriptionText ? (
+                          <p className="search-row-snippet" dir="auto">
+                            <HighlightedText text={musical.descriptionText} query={results.query} />
+                          </p>
+                        ) : null}
+                      </div>
+                    </Link>
+                  );
+                })}
+
+                {results.clips.map((clip) => (
+                  <Link
+                    key={`clip-${clip.id}`}
+                    href={`/library/${clip.musical.slug}#clip-${clip.id}`}
+                    className="search-row is-clip"
+                  >
+                    <div className="search-row-kind">{t.search.clipType}</div>
+                    <div className="search-row-body">
+                      <div className="search-row-line">
+                        <span className="search-row-title" dir="auto">
+                          <HighlightedText text={clip.title} query={results.query} />
+                        </span>
+                        <span className="search-row-parent" dir="auto">
+                          {clip.musical.title}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
         </section>

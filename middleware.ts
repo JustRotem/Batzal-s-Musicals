@@ -9,7 +9,7 @@ const ACCOUNT_SITE_PATHS = [
   /^\/auth\/google\/(start|callback)$/,
   /^\/auth\/sso$/,
   /^\/profile$/,
-  /^\/api\/(health|sso\/public-key|preferences|logout|service\/people|profile\/avatar)$/,
+  /^\/api\/(health|sso\/public-key|preferences|logout|notifications|service\/people|profile\/avatar)$/,
   /^\/uploads\/avatars\/[^/]+$/,
 ];
 
@@ -18,7 +18,7 @@ const MOVED_TO_ACCOUNT_SITE = [/^\/profile$/];
 
 // Users and permissions moved to the control panel (admin.batzal.net).
 const MOVED_TO_CONTROL_PANEL = [/^\/admin$/, /^\/admin\/permissions(\/.*)?$/];
-const ACCOUNT_SITE_ONLY = [/^\/auth\/google\/(start|callback)$/, /^\/auth\/sso$/, /^\/api\/sso\/public-key$/, /^\/api\/preferences$/, /^\/api\/service\/people$/];
+const ACCOUNT_SITE_ONLY = [/^\/auth\/google\/(start|callback)$/, /^\/auth\/sso$/, /^\/api\/sso\/public-key$/, /^\/api\/preferences$/, /^\/api\/notifications$/, /^\/api\/service\/people$/];
 
 const matches = (patterns: RegExp[], pathname: string) => patterns.some((pattern) => pattern.test(pathname));
 

@@ -97,6 +97,8 @@ export default async function NewClipPage(props: NewClipPageProps) {
             <div className="auth-error">{errorMessage}</div>
           ) : null}
           <NewClipForm
+            cancelHref={`/library/${encodeURIComponent(musical.slug)}`}
+            cancelLabel={language === "en" ? "Cancel" : "ביטול"}
             language={language}
             musical={musical}
             initialValues={initialValues}

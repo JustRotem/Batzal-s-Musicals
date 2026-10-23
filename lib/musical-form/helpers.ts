@@ -47,7 +47,9 @@ export const getMusicalFormData = (formData: FormData) => {
     size: isFileEntry(imageFileEntry) ? imageFileEntry.size : null,
     type: isFileEntry(imageFileEntry) ? imageFileEntry.type : null,
   });
-  const isPublished = formData.get("isPublished") === "on";
+  // "Save as draft" never publishes, whatever the toggle says
+  // The button decides: "save as draft" keeps it unpublished, every other save publishes it
+  const isPublished = formData.get("intent") !== "draft";
   const formValues = {
     title,
     description,

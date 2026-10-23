@@ -1,9 +1,11 @@
 "use server";
 
+import { notifyAdmins } from "@/lib/notifications";
+import { getAdminUrl } from "@/lib/app-mode";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { requirePermission, requireUser } from "@/lib/auth";
+import { getCurrentUser, requirePermission, requireUser } from "@/lib/auth";
 import { ImageUploadError, isFileEntry } from "@/lib/image-upload";
 import { updateUserAvatar } from "@/lib/profile-avatar";
 import { PERMISSIONS } from "@/lib/permissions";
@@ -58,23 +60,21 @@ function redirectProfileWithSuccess(success: string, section: ProfileSection): n
   redirect(buildProfileRedirectUrl({ section, success }));
 }
 
-export async function requestEditorAccessAction(formData: FormData) {
-  const user = await requirePermission(PERMISSIONS.profileEdit);
-  const section = normalizeSection(normalize(formData.get("section")), "profile");
+// Asking for editing access happens from a window in the header, on any Batzal page of this site.
+export async function submitEditorRequestAction(
+  message: string,
+): Promise<{ status: "sent" | "pending" | "unavailable" }> {
+  const user = await getCurrentUser();
 
-  if (user.role !== "user") {
-    redirect(buildProfileRedirectUrl({ section }));
+  if (!user || user.role !== "user" || user.status === "blocked") {
+    return { status: "unavailable" };
   }
 
   if (user.status === "pending") {
-    redirectProfileWithSuccess("editor-request-pending", section);
+    return { status: "pending" };
   }
 
-  if (user.status !== "active") {
-    redirect(buildProfileRedirectUrl({ section }));
-  }
-
-  const requestMessage = normalize(formData.get("requestMessage"));
+  const requestMessage = message.trim().slice(0, 1000);
 
   await db.user.update({
     where: { id: user.id },
@@ -82,6 +82,15 @@ export async function requestEditorAccessAction(formData: FormData) {
       status: "pending",
       requestMessage: requestMessage || null,
     },
+  });
+
+  await notifyAdmins({
+    kind: "editor-request",
+    titleHe: "בקשת גישת עריכה חדשה",
+    titleEn: "New editing access request",
+    bodyHe: `${user.username} מבקש גישת עריכה.`,
+    bodyEn: `${user.username} asked for editing access.`,
+    href: `${getAdminUrl()}`,
   });
 
   await notifyAdminsAboutEditorRequest({
@@ -93,12 +102,9 @@ export async function requestEditorAccessAction(formData: FormData) {
     requestMessage: requestMessage || null,
   });
 
-  revalidatePath("/profile");
-  revalidatePath("/admin");
-  revalidatePath("/");
-  revalidatePath("/library");
+  revalidatePath("/", "layout");
 
-  redirectProfileWithSuccess("editor-request-sent", section);
+  return { status: "sent" };
 }
 
 export async function updateAvatarAction(formData: FormData) {
