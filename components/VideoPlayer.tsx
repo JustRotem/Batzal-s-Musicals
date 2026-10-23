@@ -222,7 +222,6 @@ function VideoPlayer({
   const controlsHideTimeoutRef = useRef<number | null>(null);
   const skipResetTimeoutRef = useRef<number | null>(null);
   const skipAccumRef = useRef(0);
-  const scrollYRef = useRef<number | null>(null);
   const cursorTimeoutRef = useRef<number | null>(null);
   const skipDirectionTimeoutRef = useRef<number | null>(null);
   const lastVolumeBeforeMuteRef = useRef(1);
@@ -270,7 +269,7 @@ function VideoPlayer({
     return `${safeSkipAmount > 0 ? "" : "-"}${Math.abs(safeSkipAmount)}s`;
   }, [safeSkipAmount]);
 
-  usePreserveScrollOnFullscreen(containerRef);
+  const { captureScroll } = usePreserveScrollOnFullscreen(containerRef);
 
   function markActive() {
     hasInteractedRef.current = true;
@@ -548,12 +547,6 @@ function VideoPlayer({
       } else {
         setIsCursorVisible(true);
       }
-      if (!isNowFullscreen && scrollYRef.current !== null) {
-        const restoreTo = scrollYRef.current;
-        window.setTimeout(() => {
-          window.scrollTo({ top: restoreTo, behavior: "instant" as ScrollBehavior });
-        }, 0);
-      }
     }
 
     document.addEventListener("fullscreenchange", handleFullscreenChange);
@@ -667,7 +660,7 @@ function VideoPlayer({
     if (isPlaying) {
       player.pauseVideo();
       setIsPlaying(false);
-      containerRef.current?.focus();
+      containerRef.current?.focus({ preventScroll: true });
       return;
     }
 
@@ -678,7 +671,7 @@ function VideoPlayer({
 
     player.playVideo();
     setIsPlaying(true);
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
   }
 
   function recordSkip(deltaSeconds: number) {
@@ -724,7 +717,7 @@ function VideoPlayer({
     setCurrentSourceTime(nextTime);
     setSeekValue(Math.max(nextTime - start, 0));
     recordSkip(deltaSeconds);
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
   }
 
   function handleSeek(nextClipSeconds: number) {
@@ -752,15 +745,15 @@ function VideoPlayer({
     if (document.fullscreenElement === container) {
       await document.exitFullscreen().catch(() => undefined);
       window.setTimeout(() => {
-        containerRef.current?.focus();
+        containerRef.current?.focus({ preventScroll: true });
       }, 0);
       return;
     }
 
-    scrollYRef.current = window.scrollY;
+    captureScroll();
     await container.requestFullscreen?.().catch(() => undefined);
     window.setTimeout(() => {
-      containerRef.current?.focus();
+      containerRef.current?.focus({ preventScroll: true });
     }, 0);
   }
 
@@ -783,7 +776,7 @@ function VideoPlayer({
       setIsMuted(true);
       setVolume(currentVolume);
       revealControls();
-      containerRef.current?.focus();
+      containerRef.current?.focus({ preventScroll: true });
       return;
     }
 
@@ -798,7 +791,7 @@ function VideoPlayer({
     setIsMuted(false);
     setVolume(restoredVolume);
     revealControls();
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
   }
 
   function handleVolumeChange(nextVolume: number) {
@@ -854,7 +847,7 @@ function VideoPlayer({
     }
 
     revealControls();
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
   }
 
   // The keyboard listener lives across renders, so it calls the latest versions of these.
@@ -897,7 +890,7 @@ function VideoPlayer({
       if (code === "KeyF") {
         event.preventDefault();
         markActive();
-        containerRef.current?.focus();
+        containerRef.current?.focus({ preventScroll: true });
         void actionsRef.current?.toggleFullscreen();
         actionsRef.current?.revealControls();
         return;
@@ -952,7 +945,7 @@ function VideoPlayer({
     if (event.code === "KeyF") {
       event.preventDefault();
       markActive();
-      containerRef.current?.focus();
+      containerRef.current?.focus({ preventScroll: true });
       void toggleFullscreen();
       revealControls();
       return;
@@ -989,7 +982,7 @@ function VideoPlayer({
 
   function handleSurfaceClick() {
     markActive();
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
     clearClickTimeout();
     if (isTouchMode) {
       revealControls();
@@ -1003,7 +996,7 @@ function VideoPlayer({
 
   function handleSurfaceDoubleClick() {
     markActive();
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
     clearClickTimeout();
     void toggleFullscreen();
   }

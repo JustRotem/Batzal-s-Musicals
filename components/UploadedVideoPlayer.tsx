@@ -129,7 +129,7 @@ function UploadedVideoPlayer({
     return `${safeSkipAmount > 0 ? "" : "-"}${Math.abs(safeSkipAmount)}s`;
   }, [safeSkipAmount]);
 
-  usePreserveScrollOnFullscreen(containerRef);
+  const { captureScroll } = usePreserveScrollOnFullscreen(containerRef);
 
   function markActive() {
     hasInteractedRef.current = true;
@@ -418,13 +418,13 @@ function UploadedVideoPlayer({
 
       pulsePlaybackFeedback("play");
       void video.play();
-      containerRef.current?.focus();
+      containerRef.current?.focus({ preventScroll: true });
       return;
     }
 
     pulsePlaybackFeedback("pause");
     video.pause();
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
   }
 
   function handleSeek(nextClipSeconds: number) {
@@ -457,7 +457,7 @@ function UploadedVideoPlayer({
     setSeekValue(Math.max(nextTime - safeStart, 0));
     recordSkip(deltaSeconds);
     revealControls();
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
   }
 
   async function toggleFullscreen() {
@@ -467,16 +467,17 @@ function UploadedVideoPlayer({
     }
 
     markActive();
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
 
     if (document.fullscreenElement === container) {
       await document.exitFullscreen().catch(() => undefined);
-      containerRef.current?.focus();
+      containerRef.current?.focus({ preventScroll: true });
       return;
     }
 
+    captureScroll();
     await container.requestFullscreen?.().catch(() => undefined);
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
   }
 
   function handleSurfaceClick() {
@@ -514,7 +515,7 @@ function UploadedVideoPlayer({
     video.volume = clampedVolume;
     video.muted = clampedVolume <= 0;
     revealControls();
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
   }
 
   function toggleMute() {
@@ -537,7 +538,7 @@ function UploadedVideoPlayer({
     video.muted = nextMuted;
 
     revealControls();
-    containerRef.current?.focus();
+    containerRef.current?.focus({ preventScroll: true });
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
@@ -558,7 +559,7 @@ function UploadedVideoPlayer({
       markActive();
       void toggleFullscreen();
       revealControls();
-      containerRef.current?.focus();
+      containerRef.current?.focus({ preventScroll: true });
       return;
     }
 
@@ -617,7 +618,7 @@ function UploadedVideoPlayer({
         event.preventDefault();
         void toggleFullscreen();
         revealControls();
-        containerRef.current?.focus();
+        containerRef.current?.focus({ preventScroll: true });
         return;
       }
 

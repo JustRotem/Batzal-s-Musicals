@@ -1,6 +1,6 @@
 "use client";
 
-import { RefObject, useEffect, useRef } from "react";
+import { RefObject, useCallback, useEffect, useRef } from "react";
 
 function getFullscreenElement() {
   return document.fullscreenElement;
@@ -16,6 +16,12 @@ export function usePreserveScrollOnFullscreen(
   const fullscreenOwnerRef = useRef(false);
   const restoreTimeoutsRef = useRef<number[]>([]);
   const restoreUntilRef = useRef(0);
+  const capturedScrollYRef = useRef<number | null>(null);
+
+  // Called by the player right before it asks for fullscreen: the scroll position at that moment is what we return to.
+  const captureScroll = useCallback(() => {
+    capturedScrollYRef.current = window.scrollY;
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -29,6 +35,11 @@ export function usePreserveScrollOnFullscreen(
     }
 
     function rememberScrollPosition() {
+      // the page jumps around while fullscreen starts and ends: those positions are not where the person was
+      if (getFullscreenElement() || Date.now() < restoreUntilRef.current) {
+        return;
+      }
+
       latestScrollYRef.current = window.scrollY;
     }
 
@@ -88,9 +99,10 @@ export function usePreserveScrollOnFullscreen(
       if (fullscreenElement && container?.contains(fullscreenElement)) {
         const interactionWasRecent = Date.now() - interactionAtRef.current < 1500;
 
-        fullscreenScrollYRef.current = interactionWasRecent
-          ? interactionScrollYRef.current
-          : latestScrollYRef.current;
+        fullscreenScrollYRef.current =
+          capturedScrollYRef.current ??
+          (interactionWasRecent ? interactionScrollYRef.current : latestScrollYRef.current);
+        capturedScrollYRef.current = null;
 
         fullscreenOwnerRef.current = true;
         clearRestoreTimers();
@@ -134,4 +146,6 @@ export function usePreserveScrollOnFullscreen(
       }
     };
   }, [containerRef]);
+
+  return { captureScroll };
 }

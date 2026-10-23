@@ -4,6 +4,16 @@ import { useEffect, useState } from "react";
 import ModalCloseButton from "@/components/ModalCloseButton";
 import { createPortal } from "react-dom";
 
+// Typing the name must not fail on invisible direction marks, extra spaces or letter case.
+function normalizeTitle(value: string) {
+  return value
+    .normalize("NFC")
+    .replace(/[‎‏‪-‮⁦-⁩﻿]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase();
+}
+
 type DeleteMusicalModalProps = {
   action: (formData: FormData) => void | Promise<void>;
   musicalId: string;
@@ -39,7 +49,7 @@ export default function DeleteMusicalModal({
           confirm: "מחק פריט",
         };
 
-  const canDelete = confirmationValue === musicalTitle;
+  const canDelete = normalizeTitle(confirmationValue) === normalizeTitle(musicalTitle) && normalizeTitle(musicalTitle) !== "";
 
   useEffect(() => {
     setMounted(true);
