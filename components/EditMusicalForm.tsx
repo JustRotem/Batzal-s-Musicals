@@ -3,20 +3,23 @@
 import { useRef } from "react";
 import Link from "next/link";
 import NewMusicalSubmitButton from "@/components/NewMusicalSubmitButton";
-import { updateMusicalAction } from "@/app/admin/musicals/actions";
+import { updateMusicalAction } from "@/app/admin/library/actions";
 import ClipOrderManager from "@/components/ClipOrderManager";
 import MusicalImageUploadField from "@/components/MusicalImageUploadField";
 import MusicalDescriptionEditor from "@/components/MusicalDescriptionEditor";
+import { getCategoryFieldLabels, getCategoryLabel, type CategoryView } from "@/lib/library-categories";
 import { formatMessage, getTranslations, type AppLanguage } from "@/lib/i18n";
 
 type EditMusicalFormProps = {
   language?: AppLanguage;
+  categories?: CategoryView[];
   musical: {
     id: string;
     slug: string;
     title: string;
     description: string | null;
     year: number | null;
+    categoryId: string | null;
     imagePath: string | null;
     posterDisplayMode: "crop" | "fit";
     posterAspect: "square" | "wide" | "tall";
@@ -33,22 +36,26 @@ type EditMusicalFormProps = {
     title: string;
     description: string;
     year: string;
+    categoryId: string;
     isPublished: boolean;
   };
 };
 
 export default function EditMusicalForm({
   language = "he",
+  categories = [],
   musical,
   serverError,
   initialValues = {
     title: musical.title,
     description: musical.description ?? "",
     year: musical.year?.toString() ?? "",
+    categoryId: musical.categoryId ?? "",
     isPublished: musical.isPublished,
   },
 }: EditMusicalFormProps) {
   const t = getTranslations(language).contentEditor.musicals;
+  const fieldLabels = getCategoryFieldLabels(language);
   const imageFileRef = useRef<File | null>(null);
   const handleSubmit = async (formData: FormData) => {
     if (imageFileRef.current) {
@@ -135,6 +142,25 @@ export default function EditMusicalForm({
               </div>
             ) : null}
           </div>
+
+          <div className="field">
+            <label className="field-label" htmlFor="edit-category">
+              {fieldLabels.category}
+            </label>
+            <select
+              id="edit-category"
+              name="categoryId"
+              className="input"
+              defaultValue={initialValues.categoryId}
+            >
+              <option value="">{fieldLabels.noCategory}</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {getCategoryLabel(category, language)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </section>
 
@@ -220,7 +246,7 @@ export default function EditMusicalForm({
             idleLabel={t.saveChanges}
             pendingLabel={t.savingChanges}
           />
-          <Link href={`/musicals/${encodeURIComponent(musical.slug)}`} className="button-secondary">
+          <Link href={`/library/${encodeURIComponent(musical.slug)}`} className="button-secondary">
             {t.cancelChanges}
           </Link>
         </div>

@@ -2,12 +2,13 @@ import Link from "next/link";
 import { getAccountUrl, isAccountMode } from "@/lib/app-mode";
 import { getAppTitle } from "@/lib/app-config";
 import { getCurrentUser } from "@/lib/auth";
+import { getCurrentTheme } from "@/lib/theme-server";
 import AppsMenu from "@/components/AppsMenu";
 import BatzalAccountMenu from "@/components/BatzalAccountMenu";
 import BatzalLogo from "@/components/BatzalLogo";
 import HeaderSearch from "@/components/HeaderSearch";
 import { getCommentReportSummary } from "@/lib/comment-report-summary";
-import { canRequestEditorAccess, getPermissionFlags, PERMISSIONS } from "@/lib/permissions";
+import { canRequestEditorAccess, getPermissionFlags, hasPermission, PERMISSIONS } from "@/lib/permissions";
 import { type AppLanguage, getTranslations } from "@/lib/i18n";
 
 export default async function SiteHeader({
@@ -16,7 +17,9 @@ export default async function SiteHeader({
   language: AppLanguage;
 }) {
   const user = await getCurrentUser();
+  const theme = await getCurrentTheme();
   const t = getTranslations(language);
+  const showPanel = user ? await hasPermission(user, PERMISSIONS.panelView) : false;
   const accountSite = isAccountMode();
   const accountUrl = getAccountUrl();
 
@@ -50,7 +53,7 @@ export default async function SiteHeader({
   }
 
   return (
-    <header className="site-header bz-bar" data-theme="dark">
+    <header className="site-header bz-bar">
       <div className="site-header-inner">
         <div className="site-header-section site-header-brand">
           <Link href="/" className="bz-brand" aria-label={t.header.homeAria}>
@@ -68,7 +71,7 @@ export default async function SiteHeader({
         )}
 
         <div className="site-header-section site-header-actions">
-          <AppsMenu language={language} />
+          <AppsMenu language={language} showPanel={showPanel} />
           <BatzalAccountMenu
             user={
               user
@@ -81,9 +84,10 @@ export default async function SiteHeader({
                   }
                 : null
             }
+            theme={theme}
             language={language}
             accountUrl={accountUrl}
-            signInHref={accountSite ? "/auth/login" : "/auth/account/start"}
+            signInHref={accountSite ? "/auth/google/start" : "/auth/account/start"}
             extras={extras}
           />
         </div>

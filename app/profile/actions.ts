@@ -96,7 +96,7 @@ export async function requestEditorAccessAction(formData: FormData) {
   revalidatePath("/profile");
   revalidatePath("/admin");
   revalidatePath("/");
-  revalidatePath("/musicals");
+  revalidatePath("/library");
 
   redirectProfileWithSuccess("editor-request-sent", section);
 }
@@ -131,7 +131,7 @@ export async function updateAvatarAction(formData: FormData) {
 export async function updateUsernameAction(formData: FormData) {
   const user = await requirePermission(PERMISSIONS.profileEdit);
   const section = normalizeSection(normalize(formData.get("section")), "profile");
-  const result = validateUsername(normalize(formData.get("username")));
+  const result = validateUsername(normalize(formData.get("displayHandle")));
 
   if (!result.ok) {
     redirectProfileWithError(result.error, section);

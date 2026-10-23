@@ -3,15 +3,15 @@ import {
   requestEditorAccessAction,
   updateUsernameAction,
 } from "@/app/profile/actions";
-import { setPreferredLanguageAction } from "@/app/actions";
+import { setPreferredLanguageAction, setPreferredThemeAction } from "@/app/actions";
 import { canRequestEditorAccess } from "@/lib/permissions";
 import FormSubmitButton from "@/components/FormSubmitButton";
 import UserAvatarUploadField from "@/components/UserAvatarUploadField";
 import RequestEditorAccessModal from "@/components/RequestEditorAccessModal";
 import { getCurrentLanguage } from "@/lib/i18n-server";
+import { getCurrentTheme } from "@/lib/theme-server";
 import {
   getLanguageLabel,
-  getRoleLabel as getLocalizedRoleLabel,
   getTranslations,
 } from "@/lib/i18n";
 
@@ -72,17 +72,16 @@ const COPY = {
     email: "אימייל",
     emailHint: "האימייל מגיע מחשבון Google ולא ניתן לשינוי.",
     language: "שפה",
+    theme: "בהירות",
+    themeLight: "בהיר",
+    themeDark: "כהה",
+    themeSystem: "לפי המערכת",
     avatarTitle: "תמונת פרופיל",
     avatarText: "התמונה מוצגת בכל האתרים.",
     avatarLabel: "בחירת תמונה",
-    accessTitle: "הגישה שלי",
-    accessText: "הגישה לכל אתר מוצגת בנפרד.",
-    musicals: "מחזות זמר",
+    requestTitle: "בקשת גישת עריכה",
     staff: "הרשאות ניהול",
-    requestHint: "אם תרצה לערוך מחזות וקליפים, אפשר לבקש גישת עורך.",
-    roleEditor: "אפשר להוסיף ולערוך מחזות, ולנהל קליפים.",
-    roleAdmin: "גישת ניהול מלאה: משתמשים, הרשאות ותוכן.",
-    roleUser: "צפייה במחזות ותגובה לקליפים.",
+    requestHint: "אם תרצה לערוך פריטים וקטעים, אפשר לבקש גישת עורך.",
   },
   en: {
     kicker: "My account",
@@ -95,23 +94,23 @@ const COPY = {
     email: "Email",
     emailHint: "The email comes from your Google account and cannot be changed.",
     language: "Language",
+    theme: "Appearance",
+    themeLight: "Light",
+    themeDark: "Dark",
+    themeSystem: "Follow system",
     avatarTitle: "Profile picture",
     avatarText: "Your picture is shown on every site.",
     avatarLabel: "Choose a picture",
-    accessTitle: "My access",
-    accessText: "Access is shown separately for each site.",
-    musicals: "Musicals",
+    requestTitle: "Request editing access",
     staff: "Admin permissions",
-    requestHint: "If you want to edit musicals and clips, you can request editor access.",
-    roleEditor: "You can add and edit musicals and manage clips.",
-    roleAdmin: "Full admin access: users, permissions and content.",
-    roleUser: "You can browse musicals and comment on clips.",
+    requestHint: "If you want to edit items and clips, you can request editor access.",
   },
 } as const;
 
 export default async function ProfilePage(props: ProfilePageProps) {
   const user = await requireUser();
   const language = await getCurrentLanguage();
+  const currentTheme = await getCurrentTheme();
   const t = getTranslations(language);
   const copy = COPY[language];
   const searchParams = await props.searchParams;
@@ -120,8 +119,6 @@ export default async function ProfilePage(props: ProfilePageProps) {
     : null;
   const errorMessage = searchParams?.error ? ERROR_MESSAGES[language][searchParams.error] ?? null : null;
   const canRequestEditor = canRequestEditorAccess(user);
-  const isAdmin = user.role === "admin" || user.role === "superadmin";
-  const accessDescription = isAdmin ? copy.roleAdmin : user.role === "editor" ? copy.roleEditor : copy.roleUser;
 
   return (
     <main className="page-shell">
@@ -159,11 +156,18 @@ export default async function ProfilePage(props: ProfilePageProps) {
                       <input
                         id="profile-username"
                         className="input"
-                        name="username"
+                        name="displayHandle"
                         defaultValue={user.username}
                         minLength={3}
                         maxLength={30}
-                        autoComplete="nickname"
+                        autoComplete="off"
+                        autoCapitalize="off"
+                        autoCorrect="off"
+                        spellCheck={false}
+                        data-lpignore="true"
+                        data-1p-ignore="true"
+                        data-bwignore="true"
+                        data-form-type="other"
                         required
                       />
                       <FormSubmitButton idleLabel={copy.save} pendingLabel={copy.saving} />
@@ -198,6 +202,30 @@ export default async function ProfilePage(props: ProfilePageProps) {
                     ))}
                   </div>
                 </div>
+
+                <div className="profile-info-card">
+                  <span className="profile-info-label">{copy.theme}</span>
+                  <div className="profile-dropdown-language-actions">
+                    {(
+                      [
+                        ["light", copy.themeLight],
+                        ["dark", copy.themeDark],
+                        ["system", copy.themeSystem],
+                      ] as const
+                    ).map(([option, label]) => (
+                      <form key={option} action={setPreferredThemeAction}>
+                        <input type="hidden" name="theme" value={option} />
+                        <input type="hidden" name="redirectTo" value="/profile" />
+                        <button
+                          type="submit"
+                          className={`profile-language-chip ${(currentTheme ?? "system") === option ? "is-active" : ""}`}
+                        >
+                          {label}
+                        </button>
+                      </form>
+                    ))}
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -222,45 +250,24 @@ export default async function ProfilePage(props: ProfilePageProps) {
               </div>
             </section>
 
-            <section className="profile-panel">
-              <div className="profile-panel-heading">
-                <div>
-                  <h2 className="profile-panel-title">{copy.accessTitle}</h2>
-                  <p className="profile-access-text">{copy.accessText}</p>
-                </div>
-              </div>
-
-              <div className="profile-info-grid">
-                <div id="account-access-summary" className="profile-info-card profile-info-card-access">
-                  <div className="profile-info-label-row">
-                    <span className="profile-info-label">{copy.musicals}</span>
-                    <span className={`admin-badge ${user.role}`}>
-                      {getLocalizedRoleLabel(
-                        user.role as "user" | "editor" | "admin" | "superadmin",
-                        language,
-                      )}
-                    </span>
+            {canRequestEditor ? (
+              <section className="profile-panel" id="account-access-summary">
+                <div className="profile-panel-heading">
+                  <div>
+                    <h2 className="profile-panel-title">{copy.requestTitle}</h2>
+                    <p className="profile-access-text">{copy.requestHint}</p>
                   </div>
-                  <p className="profile-access-text" style={{ marginBottom: 0 }}>
-                    {accessDescription}
-                  </p>
-                  {canRequestEditor ? (
-                    <>
-                      <p className="profile-access-text" style={{ marginBottom: 0 }}>
-                        {copy.requestHint}
-                      </p>
-                      <div className="button-row" style={{ marginTop: 0 }}>
-                        <RequestEditorAccessModal
-                          action={requestEditorAccessAction}
-                          section="profile"
-                          language={language}
-                        />
-                      </div>
-                    </>
-                  ) : null}
                 </div>
-              </div>
-            </section>
+
+                <div className="button-row" style={{ marginTop: 0 }}>
+                  <RequestEditorAccessModal
+                    action={requestEditorAccessAction}
+                    section="profile"
+                    language={language}
+                  />
+                </div>
+              </section>
+            ) : null}
           </div>
         </section>
       </div>

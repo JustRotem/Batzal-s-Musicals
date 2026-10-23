@@ -1,6 +1,5 @@
 import Link from "next/link";
 import AdminActionButton from "@/components/AdminActionButton";
-import AdminManagementNav from "@/components/AdminManagementNav";
 import { requireAnyPermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getCurrentLanguage } from "@/lib/i18n-server";
@@ -109,13 +108,6 @@ export default async function AdminCommentReportsPage() {
             </div>
           </div>
 
-          <AdminManagementNav
-            language={language}
-            active="comments"
-            showPermissions={canManagePermissions}
-            openCommentReports={summary.open}
-          />
-
           <div className="admin-report-summary-grid">
             <div className="admin-report-summary-card">
               <strong>{t.admin.openReports}</strong>
@@ -221,13 +213,13 @@ export default async function AdminCommentReportsPage() {
 
                       <div className="admin-report-meta">
                         <span>
-                          {language === "he" ? "קליפ:" : "Clip:"}{" "}
-                          <Link href={`/musicals/${report.comment.clip.musical.slug}#clip-${report.comment.clip.id}`}>
+                          {language === "he" ? "קטע:" : "Clip:"}{" "}
+                          <Link href={`/library/${report.comment.clip.musical.slug}#clip-${report.comment.clip.id}`}>
                             {report.comment.clip.title}
                           </Link>
                         </span>
                         <span>
-                          {language === "he" ? "מחזה:" : "Musical:"} {report.comment.clip.musical.title}
+                          {language === "he" ? "פריט:" : "Musical:"} {report.comment.clip.musical.title}
                         </span>
                         <span>
                           {language === "he" ? "סיבה:" : "Reason:"}{" "}
@@ -321,13 +313,13 @@ export default async function AdminCommentReportsPage() {
 
                       <div className="admin-report-meta">
                         <span>
-                          {language === "he" ? "קליפ:" : "Clip:"}{" "}
-                          <Link href={`/musicals/${report.comment.clip.musical.slug}#clip-${report.comment.clip.id}`}>
+                          {language === "he" ? "קטע:" : "Clip:"}{" "}
+                          <Link href={`/library/${report.comment.clip.musical.slug}#clip-${report.comment.clip.id}`}>
                             {report.comment.clip.title}
                           </Link>
                         </span>
                         <span>
-                          {language === "he" ? "מחזה:" : "Musical:"} {report.comment.clip.musical.title}
+                          {language === "he" ? "פריט:" : "Musical:"} {report.comment.clip.musical.title}
                         </span>
                         <span>
                           {language === "he" ? "סיבה:" : "Reason:"}{" "}

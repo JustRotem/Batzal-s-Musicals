@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getAccountUrl, getAppMode } from "@/lib/app-mode";
+import { getAccountUrl, getAdminUrl, getAppMode } from "@/lib/app-mode";
 
 // The same code runs two sites. The account site only serves sign-in, settings, users and permissions;
 // the musicals site serves the musicals and sends account pages to the account site.
@@ -9,15 +9,16 @@ const ACCOUNT_SITE_PATHS = [
   /^\/auth\/google\/(start|callback)$/,
   /^\/auth\/sso$/,
   /^\/profile$/,
-  /^\/admin$/,
-  /^\/admin\/permissions(\/.*)?$/,
-  /^\/api\/(health|sso\/public-key|profile\/avatar)$/,
+  /^\/api\/(health|sso\/public-key|preferences|logout|service\/people|profile\/avatar)$/,
   /^\/uploads\/avatars\/[^/]+$/,
 ];
 
 // Account pages that must not exist on the musicals site.
-const MOVED_TO_ACCOUNT_SITE = [/^\/profile$/, /^\/admin$/, /^\/admin\/permissions(\/.*)?$/];
-const ACCOUNT_SITE_ONLY = [/^\/auth\/google\/(start|callback)$/, /^\/auth\/sso$/, /^\/api\/sso\/public-key$/];
+const MOVED_TO_ACCOUNT_SITE = [/^\/profile$/];
+
+// Users and permissions moved to the control panel (admin.batzal.net).
+const MOVED_TO_CONTROL_PANEL = [/^\/admin$/, /^\/admin\/permissions(\/.*)?$/];
+const ACCOUNT_SITE_ONLY = [/^\/auth\/google\/(start|callback)$/, /^\/auth\/sso$/, /^\/api\/sso\/public-key$/, /^\/api\/preferences$/, /^\/api\/service\/people$/];
 
 const matches = (patterns: RegExp[], pathname: string) => patterns.some((pattern) => pattern.test(pathname));
 
@@ -28,6 +29,10 @@ function notFound(request: NextRequest) {
 export function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
   const mode = getAppMode();
+
+  if (matches(MOVED_TO_CONTROL_PANEL, pathname)) {
+    return NextResponse.redirect(getAdminUrl());
+  }
 
   if (mode === "account") {
     if (pathname === "/") {
@@ -53,7 +58,11 @@ export function middleware(request: NextRequest) {
     pathname === "/admin" ||
     pathname.startsWith("/admin/");
 
-  const response = NextResponse.next();
+  // Pages that send signed-out visitors to sign in use this to bring them back afterwards.
+  const forwardedHeaders = new Headers(request.headers);
+  forwardedHeaders.set("x-bz-path", `${pathname}${search}`);
+
+  const response = NextResponse.next({ request: { headers: forwardedHeaders } });
 
   if (isProtected) {
     response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");

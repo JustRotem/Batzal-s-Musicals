@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import Cropper from "react-easy-crop";
-import { createClipAction } from "@/app/admin/musicals/actions";
+import { createClipAction } from "@/app/admin/library/actions";
 import ClipPreviewTimingEditor from "@/components/ClipPreviewTimingEditor";
 import NewMusicalSubmitButton from "@/components/NewMusicalSubmitButton";
 import MusicalDescriptionEditor from "@/components/MusicalDescriptionEditor";
@@ -375,7 +375,7 @@ export default function NewClipForm({
   const thumbnailCropTitle = language === "he" ? "חיתוך תמונת תצוגה" : "Crop thumbnail";
   const thumbnailCropText =
     language === "he"
-      ? "בחרו את האזור שישמש כתמונת התצוגה של הקליפ."
+      ? "בחרו את האזור שישמש כתמונת התצוגה של הקטע."
       : "Choose the area to use as the clip thumbnail.";
   const thumbnailZoomLabel = language === "he" ? "זום" : "Zoom";
   const thumbnailCropCancel = language === "he" ? "ביטול" : "Cancel";
@@ -1205,17 +1205,17 @@ export default function NewClipForm({
         </div>
 
         <div className="button-row content-editor-actions" style={{ marginTop: 0 }}>
-          {cancelHref ? (
-            <Link href={cancelHref} className="button-secondary">
-              {resolvedCancelLabel}
-            </Link>
-          ) : null}
           <NewMusicalSubmitButton
             idleLabel={resolvedSubmitLabel}
             pendingLabel={resolvedPendingLabel}
             formEncType="multipart/form-data"
             disabled={isCreateDisabled}
           />
+          {cancelHref ? (
+            <Link href={cancelHref} className="button-secondary">
+              {resolvedCancelLabel}
+            </Link>
+          ) : null}
         </div>
       </section>
     </form>

@@ -10,8 +10,8 @@ type NewMusicalSubmitButtonProps = {
 };
 
 export default function NewMusicalSubmitButton({
-  idleLabel = "צור מחזה",
-  pendingLabel = "יוצר מחזה...",
+  idleLabel = "צור פריט",
+  pendingLabel = "יוצר פריט...",
   formEncType,
   disabled = false,
 }: NewMusicalSubmitButtonProps) {

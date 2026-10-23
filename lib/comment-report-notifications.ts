@@ -44,7 +44,7 @@ function getReportNotificationCopy(language: AppLanguage, input: {
         details: [
           `Reason: ${input.reasonLabel}`,
           `Reporter: ${input.reporterName}`,
-          `Musical: ${input.musicalTitle}`,
+          `Item: ${input.musicalTitle}`,
           `Clip: ${input.clipTitle}`,
           `Comment snippet: ${input.commentSnippet}`,
           ...(input.detailsSnippet ? [`Reporter details: ${input.detailsSnippet}`] : []),
@@ -74,8 +74,8 @@ function getReportNotificationCopy(language: AppLanguage, input: {
       details: [
         `סיבה: ${input.reasonLabel}`,
         `מדווח: ${input.reporterName}`,
-        `מחזה: ${input.musicalTitle}`,
-        `קליפ: ${input.clipTitle}`,
+        `פריט: ${input.musicalTitle}`,
+        `קטע: ${input.clipTitle}`,
         `קטע מהתגובה: ${input.commentSnippet}`,
         ...(input.detailsSnippet ? [`פירוט מהמדווח: ${input.detailsSnippet}`] : []),
       ],

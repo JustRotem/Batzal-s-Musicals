@@ -47,7 +47,8 @@ export async function GET(request: NextRequest) {
     return finish("/auth/login?error=forbidden");
   }
 
-  await createSession(user.id, user.language);
+  // Join the browser's sign-in group, so signing out on any Batzal site ends this session too.
+  await createSession(user.id, user.language, claims.sid || null);
 
   return finish(next ?? "/");
 }

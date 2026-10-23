@@ -57,14 +57,14 @@ export default function MusicalArtwork({
             <div className="musical-artwork-fit-overlay" />
             <img
               src={imageSrc}
-              alt={`תמונת המחזה ${title}`}
+              alt={`תמונת הפריט ${title}`}
               className="musical-artwork-image musical-artwork-image-fit"
             />
           </div>
         ) : (
           <img
             src={imageSrc}
-            alt={`תמונת המחזה ${title}`}
+            alt={`תמונת הפריט ${title}`}
             className="musical-artwork-image"
           />
         )

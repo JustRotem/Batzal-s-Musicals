@@ -132,7 +132,7 @@ export default function MusicalOrderManager({ language, musicals, action, copy }
           <button type="button" className="button-secondary" onClick={resetOrder} disabled={!isDirty}>
             {copy.reset}
           </button>
-          <Link href="/musicals" className="button-secondary">
+          <Link href="/library" className="button-secondary">
             {copy.back}
           </Link>
         </div>
@@ -186,7 +186,7 @@ export default function MusicalOrderManager({ language, musicals, action, copy }
                       className={`musical-card-description ${descriptionText ? "" : "is-placeholder"}`}
                       dir={descriptionText ? "auto" : undefined}
                     >
-                      {descriptionText || (language === "he" ? "אין עדיין תיאור למחזה הזה" : "There is no description for this musical yet.")}
+                      {descriptionText || (language === "he" ? "אין עדיין תיאור לפריט הזה" : "There is no description for this item yet.")}
                     </span>
                   </span>
                   {isTouchMode ? (

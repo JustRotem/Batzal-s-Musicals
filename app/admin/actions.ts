@@ -596,7 +596,7 @@ export async function actionCommentReportByHidingComment(formData: FormData) {
   ]);
 
   revalidatePath("/admin/comments");
-  revalidatePath(`/musicals/${report.comment.clip.musical.slug}`, "page");
+  revalidatePath(`/library/${report.comment.clip.musical.slug}`, "page");
 }
 
 export async function unhideModeratedCommentAction(formData: FormData) {
@@ -620,5 +620,5 @@ export async function unhideModeratedCommentAction(formData: FormData) {
   });
 
   revalidatePath("/admin/comments");
-  revalidatePath(`/musicals/${musicalSlug}`, "page");
+  revalidatePath(`/library/${musicalSlug}`, "page");
 }

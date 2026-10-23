@@ -9,6 +9,7 @@ import SiteHeader from "@/components/SiteHeader";
 import { getAppTitle } from "@/lib/app-config";
 import { getDirection } from "@/lib/i18n";
 import { getCurrentLanguage } from "@/lib/i18n-server";
+import { getCurrentTheme } from "@/lib/theme-server";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +21,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: appTitle,
     description:
       language === "he"
-        ? `${appTitle} - ספריית מחזות, קטעים וניהול תוכן עם חוויית צפייה וחשבון מלאה.`
-        : `${appTitle} - a musical library with clips, accounts, search, and content management.`,
+        ? `${appTitle} - ספריית פריטים, קטעים וניהול תוכן עם חוויית צפייה וחשבון מלאה.`
+        : `${appTitle} - an item library with clips, accounts, search, and content management.`,
   };
 }
 
@@ -32,11 +33,12 @@ export default async function RootLayout({
 }>) {
   const language = await getCurrentLanguage();
   const direction = getDirection(language);
+  const theme = await getCurrentTheme();
 
   return (
-    <html lang={language} dir={direction}>
+    <html lang={language} dir={direction} data-theme={theme ?? undefined}>
       <head>
-        <link rel="stylesheet" href={`${process.env.BATZAL_STATIC_URL ?? "https://static.batzal.net"}/batzal-bar.css?v=7`} />
+        <link rel="stylesheet" href={`${process.env.BATZAL_STATIC_URL ?? "https://static.batzal.net"}/batzal-bar.css?v=11`} />
       </head>
       <body>
         <SiteHeader language={language} />

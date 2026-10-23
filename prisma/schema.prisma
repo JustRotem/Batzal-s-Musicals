@@ -29,6 +29,7 @@ model User {
   avatarUrl      String?
   requestMessage String?
   language       String    @default("he")
+  theme          String?
 
   status UserStatus @default(active)
   role   UserRole   @default(user)
@@ -75,6 +76,9 @@ enum PermissionName {
   role_manage
   editor_request_review
   profile_edit
+  panel_view
+  panel_control
+  panel_people
 }
 
 model Permission {
@@ -117,6 +121,10 @@ model Session {
   userAgent    String?
   ipAddress    String?
 
+  // One browser signed in to several Batzal sites: the account session and the sessions it created elsewhere share this id,
+  // so signing out anywhere signs out everywhere.
+  ssoGroup     String?
+
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -125,6 +133,7 @@ model Session {
 
   @@index([userId])
   @@index([expiresAt])
+  @@index([ssoGroup])
 }
 
 model Musical {
@@ -141,6 +150,10 @@ model Musical {
   posterAspect PosterAspect @default(square)
   emoji        String?
 
+  // The section of the library this item belongs to (musicals, the friends group, ...)
+  categoryId   String?
+  category     LibraryCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
   isPublished  Boolean  @default(false)
   sortOrder    Int      @default(0)
 
@@ -154,6 +167,23 @@ model Musical {
   updatedAt    DateTime @updatedAt
 
   clips        Clip[]
+
+  @@index([categoryId])
+}
+
+// A section of the library. Editors create and rename them, so the library can hold more than musicals.
+model LibraryCategory {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  nameHe    String
+  nameEn    String
+  emoji     String?
+  sortOrder Int      @default(0)
+
+  items     Musical[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum PosterDisplayMode {

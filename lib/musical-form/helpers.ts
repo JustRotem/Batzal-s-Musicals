@@ -35,6 +35,7 @@ export const getMusicalFormData = (formData: FormData) => {
   const title = normalize(formData.get("title"));
   const description = sanitizeMusicalDescription(formData.get("description")?.toString());
   const yearRaw = normalize(formData.get("year"));
+  const categoryId = normalize(formData.get("categoryId")) || null;
   const posterDisplayMode = normalizePosterDisplayMode(formData.get("posterDisplayMode"));
   const posterAspect = normalizePosterAspect(formData.get("posterAspect"));
   const imageFileEntry = formData.get("imageFile");
@@ -51,6 +52,7 @@ export const getMusicalFormData = (formData: FormData) => {
     title,
     description,
     year: yearRaw,
+    categoryId,
     posterAspect,
     isPublished,
   };
@@ -59,6 +61,7 @@ export const getMusicalFormData = (formData: FormData) => {
     title,
     description,
     yearRaw,
+    categoryId,
     posterDisplayMode,
     posterAspect,
     imageFile,

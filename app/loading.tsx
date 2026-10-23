@@ -14,7 +14,7 @@ export default async function Loading() {
         <section className="card app-loading-card" aria-live="polite" aria-busy="true">
           <div className="app-loading-spinner" aria-hidden="true" />
           <h1 className="viewer-title" style={{ marginBottom: 8 }}>
-            {language === "he" ? "טוען את Batzal's Musicals" : `Loading ${t.metadata.appName}`}
+            {language === "he" ? "טוען את ספריית הבצל" : "Loading the library"}
           </h1>
           <p className="viewer-text" style={{ marginBottom: 0 }}>
             {language === "he"

@@ -5,14 +5,16 @@ export type BatzalSite = {
   he: string;
   en: string;
   icon: string;
+  // Only offered to super admins.
+  adminOnly?: boolean;
 };
 
 export const BATZAL_SITES: BatzalSite[] = [
   {
-    host: "musicals.batzal.net",
-    href: "https://musicals.batzal.net",
-    he: "מחזות זמר",
-    en: "Musicals",
+    host: "library.batzal.net",
+    href: "https://library.batzal.net",
+    he: "הספרייה",
+    en: "Library",
     icon: "M9 18V6l10-2v12M9 18a3 3 0 11-6 0 3 3 0 016 0zM19 16a3 3 0 11-6 0 3 3 0 016 0z",
   },
   {
@@ -23,17 +25,18 @@ export const BATZAL_SITES: BatzalSite[] = [
     icon: "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z",
   },
   {
-    host: "account.batzal.net",
-    href: "https://account.batzal.net",
-    he: "החשבון שלי",
-    en: "My account",
-    icon: "M12 12a4 4 0 100-8 4 4 0 000 8zM4 20a8 8 0 0116 0",
-  },
-  {
     host: "blog.batzal.net",
     href: "https://blog.batzal.net",
     he: "בלוג",
     en: "Blog",
     icon: "M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3V4zM8 20a3 3 0 01-3-3",
+  },
+  {
+    host: "admin.batzal.net",
+    href: "https://admin.batzal.net",
+    he: "לוח בקרה",
+    en: "Control panel",
+    icon: "M4 6h16M4 12h16M4 18h16M8 4v4M16 10v4M10 16v4",
+    adminOnly: true,
   },
 ];

@@ -63,6 +63,34 @@ type YouTubePlayer = {
   unMute: () => void;
 };
 
+type CaptionTrack = { code: string; name: string };
+
+const CAPTION_PREFERENCE_KEY = "bz-caption-language";
+
+// The player only lists caption tracks after its captions module has loaded, so the list is read by polling.
+function readCaptionTracks(player: YouTubePlayer): CaptionTrack[] {
+  const raw = player.getOption?.("captions", "tracklist");
+
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  const tracks: CaptionTrack[] = [];
+
+  for (const track of raw as Array<{ languageCode?: string; languageName?: string; displayName?: string; kind?: string }>) {
+    if (!track?.languageCode || tracks.some((existing) => existing.code === track.languageCode)) {
+      continue;
+    }
+
+    tracks.push({
+      code: track.languageCode,
+      name: track.languageName || track.displayName || track.languageCode,
+    });
+  }
+
+  return tracks;
+}
+
 let youTubeIframeApiPromise: Promise<void> | null = null;
 
 function loadYouTubeIframeApi() {
@@ -199,7 +227,17 @@ function VideoPlayer({
   const skipDirectionTimeoutRef = useRef<number | null>(null);
   const lastVolumeBeforeMuteRef = useRef(1);
   const hasInteractedRef = useRef(false);
-  const hasAutoEnabledCaptionsRef = useRef(false);
+  const captionLangRef = useRef<string | null>(null);
+  const isSeekingRef = useRef(false);
+  const effectiveEndRef = useRef<number | null>(null);
+  const actionsRef = useRef<{
+    skipBy: (delta: number) => void;
+    togglePlayback: () => void;
+    toggleCaptions: () => void;
+    toggleMute: () => void;
+    toggleFullscreen: () => Promise<void>;
+    revealControls: () => void;
+  } | null>(null);
   const playerTokenRef = useRef<symbol>(Symbol("youtube-player"));
   const resumeTimeRef = useRef<number | null>(null);
   const resumePlayingRef = useRef(false);
@@ -213,7 +251,9 @@ function VideoPlayer({
   const [controlsVisible, setControlsVisible] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1);
-  const [captionsEnabled, setCaptionsEnabled] = useState(false);
+  const [captionTracks, setCaptionTracks] = useState<CaptionTrack[]>([]);
+  const [captionLang, setCaptionLang] = useState<string | null>(null);
+  const [captionMenuOpen, setCaptionMenuOpen] = useState(false);
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
   const [skipAmount, setSkipAmount] = useState(0);
@@ -261,14 +301,6 @@ function VideoPlayer({
     return () => media.removeListener(handleChange);
   }, []);
 
-  useEffect(() => {
-    if (!isTouchMode || hasAutoEnabledCaptionsRef.current) {
-      return;
-    }
-    hasAutoEnabledCaptionsRef.current = true;
-    setCaptionsEnabled(true);
-  }, [isTouchMode]);
-
   const effectiveEnd = useMemo(() => {
     if (typeof end === "number") {
       return end;
@@ -280,6 +312,10 @@ function VideoPlayer({
 
     return null;
   }, [end, fullDuration, start]);
+
+  isSeekingRef.current = isSeeking;
+  effectiveEndRef.current = effectiveEnd;
+  captionLangRef.current = captionLang;
 
   const segmentDuration = useMemo(() => {
     if (effectiveEnd === null) {
@@ -334,14 +370,29 @@ function VideoPlayer({
     }
   }
 
-  function applyCaptionsState(player: YouTubePlayer, enabled: boolean) {
-    if (enabled) {
-      player.loadModule?.("captions");
-      player.setOption?.("captions", "reload", true);
+  function selectCaption(code: string | null) {
+    const player = playerRef.current;
+
+    if (!player) {
       return;
     }
 
-    player.unloadModule?.("captions");
+    markActive();
+    setCaptionLang(code);
+    setCaptionMenuOpen(false);
+
+    try {
+      window.localStorage.setItem(CAPTION_PREFERENCE_KEY, code ?? "off");
+    } catch {
+      // the choice still applies for this video
+    }
+
+    if (code) {
+      player.loadModule?.("captions");
+      player.setOption?.("captions", "track", { languageCode: code });
+    } else {
+      player.unloadModule?.("captions");
+    }
   }
 
   useEffect(() => {
@@ -371,28 +422,24 @@ function VideoPlayer({
           modestbranding: 1,
           iv_load_policy: 3,
           disablekb: 1,
-          cc_load_policy: captionsEnabled ? 1 : 0,
-          cc_lang_pref: document.documentElement.lang?.slice(0, 2) || "en",
+          cc_load_policy: 0,
         },
         events: {
           onReady: () => {
             const readyPlayer = player as unknown as YouTubePlayer;
             const duration = readyPlayer.getDuration() || 0;
-            const initialTime = resumeTimeRef.current ?? start;
-            const shouldResumePlayback = resumePlayingRef.current || autoPlay;
+            const initialTime = start;
+            const shouldResumePlayback = autoPlay;
             setFullDuration(duration > 0 ? duration : null);
             setCurrentSourceTime(initialTime);
             setSeekValue(Math.max(initialTime - start, 0));
             setIsReady(true);
             setVolume((readyPlayer.getVolume() ?? 100) / 100);
             setIsMuted(readyPlayer.isMuted() ?? false);
-            applyCaptionsState(readyPlayer, captionsEnabled);
             readyPlayer.seekTo(initialTime, true);
             if (shouldResumePlayback) {
               readyPlayer.playVideo();
             }
-            resumeTimeRef.current = null;
-            resumePlayingRef.current = false;
           },
           onStateChange: (event) => {
             const isCurrentlyPlaying =
@@ -408,21 +455,27 @@ function VideoPlayer({
             markActive();
             stopPolling();
             intervalRef.current = window.setInterval(() => {
-              const current = player.getCurrentTime() || start;
-            if (!isSeeking) {
-              setCurrentSourceTime(current);
-              setSeekValue(Math.max(current - start, 0));
-            }
+              if (typeof player.getCurrentTime !== "function") {
+                return;
+              }
 
-            if (typeof effectiveEnd === "number" && current >= effectiveEnd) {
-              player.pauseVideo();
-              player.seekTo(effectiveEnd, true);
-              setCurrentSourceTime(effectiveEnd);
-              setSeekValue(Math.max(effectiveEnd - start, 0));
-              setIsPlaying(false);
-              stopPolling();
-            }
-          }, 200);
+              const current = player.getCurrentTime() || start;
+              const endTime = effectiveEndRef.current;
+
+              if (!isSeekingRef.current) {
+                setCurrentSourceTime(current);
+                setSeekValue(Math.max(current - start, 0));
+              }
+
+              if (typeof endTime === "number" && current >= endTime) {
+                player.pauseVideo();
+                player.seekTo(endTime, true);
+                setCurrentSourceTime(endTime);
+                setSeekValue(Math.max(endTime - start, 0));
+                setIsPlaying(false);
+                stopPolling();
+              }
+            }, 200);
           },
         },
       });
@@ -441,7 +494,50 @@ function VideoPlayer({
       playerRef.current?.destroy();
       playerRef.current = null;
     };
-  }, [captionsEnabled, effectiveEnd, isSeeking, isTouchMode, resolvedVideoId, start]);
+  }, [isTouchMode, resolvedVideoId, start]);
+
+  useEffect(() => {
+    if (!isReady) {
+      return;
+    }
+
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      const player = playerRef.current;
+
+      if (!player || typeof player.loadModule !== "function") {
+        return;
+      }
+
+      tries += 1;
+      player.loadModule("captions");
+      const tracks = readCaptionTracks(player);
+
+      if (tracks.length > 0 || tries >= 12) {
+        window.clearInterval(timer);
+        setCaptionTracks(tracks);
+
+        let preferred: string | null = null;
+
+        try {
+          preferred = window.localStorage.getItem(CAPTION_PREFERENCE_KEY);
+        } catch {
+          preferred = null;
+        }
+
+        const chosen = tracks.find((track) => track.code === preferred);
+
+        if (chosen) {
+          setCaptionLang(chosen.code);
+          player.setOption?.("captions", "track", { languageCode: chosen.code });
+        } else {
+          player.unloadModule("captions");
+        }
+      }
+    }, 700);
+
+    return () => window.clearInterval(timer);
+  }, [isReady]);
 
   useEffect(() => {
     function handleFullscreenChange() {
@@ -618,6 +714,10 @@ function VideoPlayer({
         : typeof fullDuration === "number"
           ? fullDuration
           : start;
+    if (typeof player.getCurrentTime !== "function") {
+      return;
+    }
+
     const currentTime = player.getCurrentTime() || currentSourceTime;
     const nextTime = clamp(currentTime + deltaSeconds, start, Math.max(maxTime, start));
     player.seekTo(nextTime, true);
@@ -730,19 +830,35 @@ function VideoPlayer({
   }
 
   function toggleCaptions() {
-    const player = playerRef.current;
-    if (!player) {
+    if (captionTracks.length === 0) {
       return;
     }
 
-    markActive();
+    if (captionLang) {
+      selectCaption(null);
+    } else {
+      let preferred: string | null = null;
 
-    resumeTimeRef.current = player.getCurrentTime() || start;
-    resumePlayingRef.current = isPlaying;
-    setCaptionsEnabled((current) => !current);
+      try {
+        preferred = window.localStorage.getItem(CAPTION_PREFERENCE_KEY);
+      } catch {
+        preferred = null;
+      }
+
+      const track =
+        captionTracks.find((item) => item.code === preferred) ??
+        captionTracks.find((item) => item.code.startsWith("en")) ??
+        captionTracks[0];
+
+      selectCaption(track.code);
+    }
+
     revealControls();
     containerRef.current?.focus();
   }
+
+  // The keyboard listener lives across renders, so it calls the latest versions of these.
+  actionsRef.current = { skipBy, togglePlayback, toggleCaptions, toggleMute, toggleFullscreen, revealControls };
 
   useEffect(() => {
     if (!isReady) {
@@ -773,8 +889,8 @@ function VideoPlayer({
 
       if (code === "Space") {
         event.preventDefault();
-        togglePlayback();
-        revealControls();
+        actionsRef.current?.togglePlayback();
+        actionsRef.current?.revealControls();
         return;
       }
 
@@ -782,34 +898,34 @@ function VideoPlayer({
         event.preventDefault();
         markActive();
         containerRef.current?.focus();
-        void toggleFullscreen();
-        revealControls();
+        void actionsRef.current?.toggleFullscreen();
+        actionsRef.current?.revealControls();
         return;
       }
 
       if (code === "KeyC") {
         event.preventDefault();
-        toggleCaptions();
-        revealControls();
+        actionsRef.current?.toggleCaptions();
+        actionsRef.current?.revealControls();
         return;
       }
 
       if (code === "KeyM") {
         event.preventDefault();
-        toggleMute();
-        revealControls();
+        actionsRef.current?.toggleMute();
+        actionsRef.current?.revealControls();
         return;
       }
 
       if (code === "ArrowRight") {
         event.preventDefault();
-        skipBy(5);
+        actionsRef.current?.skipBy(5);
         return;
       }
 
       if (code === "ArrowLeft") {
         event.preventDefault();
-        skipBy(-5);
+        actionsRef.current?.skipBy(-5);
         return;
       }
     }
@@ -846,7 +962,6 @@ function VideoPlayer({
       event.preventDefault();
       markActive();
       toggleCaptions();
-      revealControls();
       return;
     }
 
@@ -998,15 +1113,42 @@ function VideoPlayer({
               </div>
             </div>
 
-            <button
-              type="button"
-              className={`button-secondary button-small clip-segment-caption-button ${captionsEnabled ? "is-active" : ""}`}
-              onClick={toggleCaptions}
-              aria-label={captionsEnabled ? "Hide captions" : "Show captions"}
-              title={captionsEnabled ? "Hide captions" : "Show captions"}
-            >
-              <CaptionsIcon />
-            </button>
+            {captionTracks.length > 0 ? (
+              <div className="clip-caption-wrap">
+                <button
+                  type="button"
+                  className={`button-secondary button-small clip-segment-caption-button ${captionLang ? "is-active" : ""}`}
+                  onClick={() => setCaptionMenuOpen((open) => !open)}
+                  aria-haspopup="true"
+                  aria-expanded={captionMenuOpen}
+                  aria-label="Subtitles"
+                  title="Subtitles"
+                >
+                  <CaptionsIcon />
+                </button>
+                {captionMenuOpen ? (
+                  <ul className="clip-caption-menu" role="menu">
+                    <li>
+                      <button type="button" role="menuitemradio" aria-checked={!captionLang} onClick={() => selectCaption(null)}>
+                        Off
+                      </button>
+                    </li>
+                    {captionTracks.map((track) => (
+                      <li key={track.code}>
+                        <button
+                          type="button"
+                          role="menuitemradio"
+                          aria-checked={captionLang === track.code}
+                          onClick={() => selectCaption(track.code)}
+                        >
+                          {track.name}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </div>
+            ) : null}
 
             <button
               type="button"

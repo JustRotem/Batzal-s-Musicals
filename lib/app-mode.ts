@@ -25,7 +25,12 @@ export function getAccountUrl() {
   return readUrl("ACCOUNT_URL", "https://account.batzal.net", "http://localhost:3001");
 }
 
+// Where the control panel lives (users and permissions are managed there).
+export function getAdminUrl() {
+  return readUrl("ADMIN_URL", "https://admin.batzal.net", "http://localhost:4011");
+}
+
 // Where the musicals site lives.
 export function getMusicalsUrl() {
-  return readUrl("MUSICALS_URL", "https://musicals.batzal.net", "http://localhost:3000");
+  return readUrl("MUSICALS_URL", "https://library.batzal.net", "http://localhost:3000");
 }

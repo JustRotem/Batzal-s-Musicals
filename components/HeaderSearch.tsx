@@ -27,11 +27,11 @@ function getResultHref(result: ActiveResult, payload: SearchContentResult) {
   }
 
   if (result.type === "musical") {
-    return `/musicals/${payload.musicals[result.index]?.slug ?? ""}`;
+    return `/library/${payload.musicals[result.index]?.slug ?? ""}`;
   }
 
   const clip = payload.clips[result.index];
-  return clip ? `/musicals/${clip.musical.slug}#clip-${clip.id}` : null;
+  return clip ? `/library/${clip.musical.slug}#clip-${clip.id}` : null;
 }
 
 function getResultKey(result: ActiveResult) {
@@ -55,7 +55,7 @@ function MusicalSearchRow({
 }) {
   return (
     <Link
-      href={`/musicals/${musical.slug}`}
+      href={`/library/${musical.slug}`}
       className={`header-search-result ${active ? "is-active" : ""}`}
     >
       <div className="header-search-result-artwork">
@@ -100,7 +100,7 @@ function ClipSearchRow({
 
   return (
     <Link
-      href={`/musicals/${clip.musical.slug}#clip-${clip.id}`}
+      href={`/library/${clip.musical.slug}#clip-${clip.id}`}
       className={`header-search-result ${active ? "is-active" : ""}`}
     >
       <div className="header-search-result-artwork header-search-result-artwork-clip">

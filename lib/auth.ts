@@ -1,8 +1,10 @@
+import { sharedCookieOptions } from "@/lib/shared-cookie";
 import { randomBytes, scryptSync, createHash } from "crypto";
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { sanitizeNextPath } from "@/lib/login-next";
 import { getAppMode } from "@/lib/app-mode";
 import { 
   hasPermission,
@@ -12,7 +14,6 @@ import {
   syncPermissionDefinitions,
 } from "@/lib/permissions";
 import {
-  LANGUAGE_COOKIE_MAX_AGE_SECONDS,
   LANGUAGE_COOKIE_NAME,
   normalizeLanguage,
 } from "@/lib/i18n";
@@ -37,8 +38,11 @@ type SafeUser = {
   avatarUrl: string | null;
   avatarVersion: string;
   language: string;
+  theme: "light" | "dark" | null;
   status: "pending" | "active" | "blocked";
   role: "user" | "editor" | "admin" | "superadmin";
+  // Shared by every Batzal site this browser is signed in to
+  ssoGroup: string | null;
 };
 
 function hashSha256(value: string): string {
@@ -76,9 +80,10 @@ function buildSafeUser(user: {
   avatarUrl: string | null;
   updatedAt: Date;
   language: string;
+  theme: string | null;
   status: "pending" | "active" | "blocked";
   role: "user" | "editor" | "admin" | "superadmin";
-}): SafeUser {
+}): Omit<SafeUser, "ssoGroup"> {
   return {
     id: user.id,
     firstName: user.firstName,
@@ -91,12 +96,13 @@ function buildSafeUser(user: {
     avatarUrl: user.avatarUrl,
     avatarVersion: user.updatedAt.toISOString(),
     language: user.language,
+    theme: user.theme === "light" || user.theme === "dark" ? user.theme : null,
     status: user.status,
     role: user.role,
   };
 }
 
-export async function createSession(userId: string, language?: string | null) {
+export async function createSession(userId: string, language?: string | null, ssoGroup?: string | null) {
   const rawToken = randomBytes(SESSION_TOKEN_BYTES).toString("hex");
   const tokenHash = hashSha256(rawToken);
 
@@ -113,6 +119,7 @@ export async function createSession(userId: string, language?: string | null) {
       tokenHash,
       userId,
       expiresAt,
+      ssoGroup: ssoGroup ?? randomBytes(16).toString("hex"),
       userAgent: headerStore.get("user-agent") ?? undefined,
       ipAddress:
         headerStore.get("x-forwarded-for")?.split(",")[0]?.trim() ?? undefined,
@@ -128,13 +135,7 @@ export async function createSession(userId: string, language?: string | null) {
   });
 
   if (typeof language === "string" && language.trim()) {
-    cookieStore.set(LANGUAGE_COOKIE_NAME, normalizeLanguage(language), {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: LANGUAGE_COOKIE_MAX_AGE_SECONDS,
-    });
+    cookieStore.set(LANGUAGE_COOKIE_NAME, normalizeLanguage(language), sharedCookieOptions());
   }
 }
 
@@ -144,11 +145,11 @@ export async function clearSession() {
 
   if (rawToken) {
     const tokenHash = hashSha256(rawToken);
+    const session = await db.session.findUnique({ where: { tokenHash }, select: { ssoGroup: true } });
 
+    // Signing out ends this browser's session on every Batzal site, not just this one.
     await db.session.deleteMany({
-      where: {
-        tokenHash,
-      },
+      where: session?.ssoGroup ? { ssoGroup: session.ssoGroup } : { tokenHash },
     });
   }
 
@@ -199,7 +200,15 @@ async function resolveCurrentUser(): Promise<SafeUser | null> {
       return null;
     }
 
-  return buildSafeUser(session.user);
+  // Sessions made before groups existed get one now, so they can be shared with the other sites.
+  let ssoGroup = session.ssoGroup;
+
+  if (!ssoGroup) {
+    ssoGroup = randomBytes(16).toString("hex");
+    await db.session.update({ where: { id: session.id }, data: { ssoGroup } });
+  }
+
+  return { ...buildSafeUser(session.user), ssoGroup };
 }
 
 export const getCurrentUser = cache(resolveCurrentUser);
@@ -208,7 +217,10 @@ export async function requireUser() {
   const user = await getCurrentUser();
 
   if (!user) {
-    redirect("/auth/login?error=unauthorized");
+    const headerStore = await headers();
+    const next = sanitizeNextPath(headerStore.get("x-bz-path"));
+
+    redirect(next ? `/auth/login?error=unauthorized&next=${encodeURIComponent(next)}` : "/auth/login?error=unauthorized");
   }
 
   return user;

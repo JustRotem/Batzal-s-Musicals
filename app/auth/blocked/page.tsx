@@ -15,7 +15,7 @@ export default function BlockedAccountPage() {
           </p>
 
           <div className="button-row auth-actions" style={{ marginTop: 0 }}>
-            <Link className="button-secondary" href="/auth/login">
+            <Link className="button-secondary" href="/auth/login" prefetch={false}>
               חזרה להתחברות
             </Link>
           </div>

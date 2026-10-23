@@ -304,7 +304,7 @@ export async function searchContent(
     .map((musical) => {
       const descriptionText = getRichTextPlainText(musical.description);
       const yearSnippet = musical.year ? `שנה: ${musical.year}` : "";
-      const fallbackSnippet = yearSnippet || "מחזה זמין לצפייה במערכת.";
+      const fallbackSnippet = yearSnippet || "פריט זמין לצפייה במערכת.";
       const snippetSource =
         descriptionText || [musical.title, yearSnippet].filter(Boolean).join(" • ");
 

@@ -16,8 +16,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: language === "he" ? `חיפוש | ${appTitle}` : `Search | ${appTitle}`,
     description:
       language === "he"
-        ? `חיפוש מחזות, קטעים ותוכן ב-${appTitle}.`
-        : `Search musicals, clips, and content in ${appTitle}.`,
+        ? `חיפוש פריטים, קטעים ותוכן ב-${appTitle}.`
+        : `Search items, clips, and content in ${appTitle}.`,
   };
 }
 
@@ -107,7 +107,7 @@ export default async function SearchPage(props: SearchPageProps) {
                     {results.musicals.map((musical) => (
                       <Link
                         key={musical.id}
-                        href={`/musicals/${musical.slug}`}
+                        href={`/library/${musical.slug}`}
                         className="show-card search-result-card"
                       >
                         <div className="search-result-artwork">
@@ -157,7 +157,7 @@ export default async function SearchPage(props: SearchPageProps) {
                     {results.clips.map((clip) => (
                       <Link
                         key={clip.id}
-                        href={`/musicals/${clip.musical.slug}#clip-${clip.id}`}
+                        href={`/library/${clip.musical.slug}#clip-${clip.id}`}
                         className="show-card search-result-card"
                       >
                         <div className="search-result-body">

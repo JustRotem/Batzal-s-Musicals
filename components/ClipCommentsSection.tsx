@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   COMMENT_MAX_LENGTH,
@@ -17,7 +18,7 @@ import {
   createClipCommentReportAction,
   hideClipCommentAction,
   type ClipCommentFormState,
-} from "@/app/musicals/actions";
+} from "@/app/library/actions";
 
 type ClipCommentsSectionProps = {
   clipId: string;
@@ -144,6 +145,8 @@ export default function ClipCommentsSection({
   const [reportReason, setReportReason] = useState(reportReasonOptions[0]?.value ?? "spam");
   const [reportDetails, setReportDetails] = useState("");
   const [reportedIds, setReportedIds] = useState<string[]>(reportedCommentIds);
+
+  const pathname = usePathname();
 
   useEffect(() => {
     setComments(initialComments);
@@ -302,7 +305,11 @@ export default function ClipCommentsSection({
             <strong>{copy.authTitle}</strong>
             <span>{copy.authText}</span>
           </div>
-          <Link href="/auth/login" className="button-secondary">
+          <Link
+            href={`/auth/account/start?next=${encodeURIComponent(`${pathname || "/"}#clip-${clipId}`)}`}
+            prefetch={false}
+            className="button-secondary"
+          >
             {copy.authButton}
           </Link>
         </div>

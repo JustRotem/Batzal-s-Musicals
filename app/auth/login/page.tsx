@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
-import { isAccountMode } from "@/lib/app-mode";
+import { getMusicalsUrl, isAccountMode } from "@/lib/app-mode";
 import { getCurrentUser } from "@/lib/auth";
 import { isGoogleAuthEnabled } from "@/lib/google-auth";
 import { getCurrentLanguage } from "@/lib/i18n-server";
@@ -26,7 +27,8 @@ export default async function LoginPage(props: LoginPageProps) {
   }
 
   const errorMessages = t.auth.login.errors as Record<string, string>;
-  const errorCode = searchParams?.error;
+  // "unauthorized" only means "sign in first": go straight to Google instead of showing a screen.
+  const errorCode = searchParams?.error && searchParams.error !== "unauthorized" ? searchParams.error : undefined;
   const errorMessage = errorCode ? errorMessages[errorCode] ?? null : null;
   const accountSite = isAccountMode();
 
@@ -35,8 +37,15 @@ export default async function LoginPage(props: LoginPageProps) {
     ? `/auth/account/start?next=${encodeURIComponent(next)}`
     : "/auth/account/start";
 
-  if (!accountSite && !errorCode) {
-    redirect(accountStartHref);
+  // There is no sign-in screen: this page only exists to explain a failed sign-in.
+  if (!errorCode) {
+    redirect(
+      accountSite
+        ? next
+          ? `/auth/google/start?next=${encodeURIComponent(next)}`
+          : "/auth/google/start"
+        : accountStartHref,
+    );
   }
 
   const googleAuthEnabled = accountSite ? isGoogleAuthEnabled() : true;
@@ -48,8 +57,7 @@ export default async function LoginPage(props: LoginPageProps) {
 
       <div className="container">
         <section className="card auth-card">
-          <h1 className="viewer-title">{t.auth.login.title}</h1>
-          <p className="viewer-text">{t.auth.login.description}</p>
+          <h1 className="viewer-title">{language === "he" ? "ההתחברות לא הושלמה" : "Sign-in did not complete"}</h1>
 
           <div className="auth-container">
             <div className="form-grid auth-form auth-form-compact auth-form-login">
@@ -73,7 +81,9 @@ export default async function LoginPage(props: LoginPageProps) {
                 ) : null}
               </div>
 
-              <p className="viewer-text auth-success-note">{t.auth.login.googleOnlyNote}</p>
+              <Link className="button-secondary" href={accountSite ? getMusicalsUrl() : "/"}>
+                {language === "he" ? "המשך כאורח" : "Continue as guest"}
+              </Link>
             </div>
           </div>
         </section>

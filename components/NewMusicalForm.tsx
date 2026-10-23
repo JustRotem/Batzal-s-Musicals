@@ -1,34 +1,42 @@
 "use client";
 
+import Link from "next/link";
+
 import { useRef } from "react";
 import NewMusicalSubmitButton from "@/components/NewMusicalSubmitButton";
-import { createMusicalAction } from "@/app/admin/musicals/actions";
+import { createMusicalAction } from "@/app/admin/library/actions";
 import MusicalImageUploadField from "@/components/MusicalImageUploadField";
 import MusicalDescriptionEditor from "@/components/MusicalDescriptionEditor";
+import { getCategoryFieldLabels, getCategoryLabel, type CategoryView } from "@/lib/library-categories";
 import { getTranslations, type AppLanguage } from "@/lib/i18n";
 
 type NewMusicalFormProps = {
   language?: AppLanguage;
+  categories?: CategoryView[];
   serverError?: string;
   initialValues?: {
     title: string;
     description: string;
     year: string;
+    categoryId: string;
     isPublished: boolean;
   };
 };
 
 export default function NewMusicalForm({
   language = "he",
+  categories = [],
   serverError,
   initialValues = {
     title: "",
     description: "",
     year: "",
+    categoryId: "",
     isPublished: false,
   },
 }: NewMusicalFormProps) {
   const t = getTranslations(language).contentEditor.musicals;
+  const fieldLabels = getCategoryFieldLabels(language);
   const imageFileRef = useRef<File | null>(null);
   const handleSubmit = async (formData: FormData) => {
     if (imageFileRef.current) {
@@ -101,6 +109,25 @@ export default function NewMusicalForm({
               dir="ltr"
               style={{ textAlign: "left" }}
             />
+          </div>
+
+          <div className="field">
+            <label className="field-label" htmlFor="category">
+              {fieldLabels.category}
+            </label>
+            <select
+              id="category"
+              name="categoryId"
+              className="input"
+              defaultValue={initialValues.categoryId}
+            >
+              <option value="">{fieldLabels.noCategory}</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {getCategoryLabel(category, language)}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </section>
@@ -181,6 +208,9 @@ export default function NewMusicalForm({
 
         <div className="button-row content-editor-actions" style={{ marginTop: 0 }}>
           <NewMusicalSubmitButton idleLabel={t.create} pendingLabel={t.creating} />
+          <Link href="/library" className="button-secondary">
+            {language === "he" ? "ביטול" : "Cancel"}
+          </Link>
         </div>
       </section>
     </form>

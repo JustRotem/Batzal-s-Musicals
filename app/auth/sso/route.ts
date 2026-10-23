@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getAppUrl } from "@/lib/env";
+import { getEffectivePermissions } from "@/lib/permissions";
 import {
   buildSsoCallbackUrl,
   isSsoEnabled,
@@ -63,6 +64,9 @@ export async function GET(request: NextRequest) {
       picture,
       role: user.role,
       lang: user.language,
+      theme: user.theme,
+      perms: await getEffectivePermissions(user),
+      sid: user.ssoGroup ?? "",
     },
     parsed.origin,
     parsed.state,

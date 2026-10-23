@@ -21,6 +21,9 @@ const user = {
   picture: null,
   role: "user",
   lang: "he",
+  theme: "dark",
+  perms: ["panel_view"],
+  sid: "group-1",
 };
 const STATE = "abcdefghijklmnop1234";
 const QR = "https://qr.batzal.net";

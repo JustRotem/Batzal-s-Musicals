@@ -26,7 +26,7 @@ function buildSearchUrl(pathname: string, query: string) {
 
 export default function SearchBox({
   initialQuery = "",
-  placeholder = "חפש מחזות, קטעים או תיאור...",
+  placeholder = "חפש פריטים, קטעים או תיאור...",
   ariaLabel = "חיפוש במערכת",
   submitLabel = "חיפוש",
   live = false,

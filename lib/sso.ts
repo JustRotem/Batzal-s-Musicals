@@ -10,6 +10,8 @@ export const SSO_TOKEN_TTL_SECONDS = 60;
 export const SSO_CALLBACK_PATH = "/api/sso/callback";
 
 const DEFAULT_ALLOWED_ORIGINS = [
+  "https://library.batzal.net",
+  // the previous address stays approved while it redirects to the library
   "https://musicals.batzal.net",
   "https://qr.batzal.net",
   "https://admin.batzal.net",
@@ -28,6 +30,11 @@ export type SsoClaims = {
   picture: string | null;
   role: string;
   lang: string;
+  theme: string | null;
+  // Effective permissions, so sites without database access can decide what to show
+  perms: string[];
+  // The browser's sign-in group: sessions that share it end together
+  sid: string;
   state: string;
   jti: string;
   iat: number;

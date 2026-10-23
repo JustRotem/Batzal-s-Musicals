@@ -43,7 +43,7 @@ export default function LazyClipPlayer({
           pause: "Pause",
         }
       : {
-          action: "נגן קליפ",
+          action: "נגן קטע",
           play: "נגן",
           pause: "עצור",
         };

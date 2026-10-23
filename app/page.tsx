@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAppTitle } from "@/lib/app-config";
+import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { findVisibleMusicals } from "@/lib/musicals";
-import {
-  canAccessAdminArea,
-  canRequestEditorAccess,
-  getPermissionFlags,
-  PERMISSIONS,
-} from "@/lib/permissions";
+import { canManageMusicalContent } from "@/lib/permissions";
+import { getCategoryName } from "@/lib/library-categories";
 import MusicalArtwork from "@/components/MusicalArtwork";
 import { formatMessage, getTranslations } from "@/lib/i18n";
 import { getCurrentLanguage } from "@/lib/i18n-server";
@@ -22,8 +19,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: appTitle,
     description:
       language === "he"
-        ? `ספריית המחזות של ${appTitle} עם חיפוש, קליפים, חשבונות וניהול תוכן.`
-        : `${appTitle} - a musical library with clips, accounts, search, and content management.`,
+        ? `ספריית הפריטים של ${appTitle} עם חיפוש, קטעים, חשבונות וניהול תוכן.`
+        : `${appTitle} - an item library with clips, accounts, search, and content management.`,
   };
 }
 
@@ -31,33 +28,24 @@ export default async function HomePage() {
   const language = await getCurrentLanguage();
   const t = getTranslations(language);
   const currentUser = await getCurrentUser();
-  const permissionFlags = await getPermissionFlags(currentUser, [
-    PERMISSIONS.musicalCreate,
-    PERMISSIONS.userView,
-    PERMISSIONS.userManage,
-    PERMISSIONS.roleManage,
-    PERMISSIONS.editorRequestReview,
-  ] as const);
-  const canAccessAnyAdminArea = await canAccessAdminArea(currentUser);
-  const adminHref =
-    permissionFlags.user_view ||
-    permissionFlags.user_manage ||
-    permissionFlags.editor_request_review
-      ? "/admin"
-      : "/admin/permissions";
-  const adminLinkTitle =
-    permissionFlags.user_view || permissionFlags.user_manage || permissionFlags.editor_request_review
-      ? t.home.adminAccountsTitle
-      : t.home.adminPermissionsTitle;
-  const adminLinkText =
-    permissionFlags.user_view || permissionFlags.user_manage || permissionFlags.editor_request_review
-      ? t.home.adminAccountsText
-      : t.home.adminPermissionsText;
+  const canSeeUnpublished = currentUser ? await canManageMusicalContent(currentUser) : false;
+  const popularClips = await db.clip.findMany({
+    where: canSeeUnpublished ? undefined : { musical: { isPublished: true } },
+    orderBy: [{ comments: { _count: "desc" } }, { createdAt: "desc" }],
+    take: 5,
+    select: {
+      id: true,
+      title: true,
+      musical: { select: { slug: true, title: true } },
+      _count: { select: { comments: { where: { status: "visible" } } } },
+    },
+  });
 
   const musicals = await findVisibleMusicals({
     take: 4,
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
     include: {
+      category: true,
       clips: {
         orderBy: { sortOrder: "asc" },
       },
@@ -95,7 +83,7 @@ export default async function HomePage() {
               <h2 className="panel-title" style={{ marginBottom: 0 }}>
                 {t.home.musicalsTitle}
               </h2>
-              <Link className="button-secondary" href="/musicals">
+              <Link className="button-secondary" href="/library">
                 {t.home.allMusicals}
               </Link>
             </div>
@@ -130,7 +118,7 @@ export default async function HomePage() {
                     <Link
                       key={musical.id}
                       className="show-card musicals-grid-card"
-                      href={`/musicals/${musical.slug}`}
+                      href={`/library/${musical.slug}`}
                       style={{ cursor: "pointer" }}
                     >
                       <div className="musical-card-artwork">
@@ -145,9 +133,11 @@ export default async function HomePage() {
                       </div>
                       <div className="musical-card-body">
                         <span className="musical-card-title">{musical.title}</span>
-                        {musical.year ? (
-                          <span className="musical-card-year">{musical.year}</span>
-                        ) : null}
+                        <span className="musical-card-year">
+                          {[musical.category ? getCategoryName(musical.category, language) : null, musical.year]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
                         <span className="musical-card-description-wrap">
                           <span
                             className={`musical-card-description ${
@@ -174,44 +164,27 @@ export default async function HomePage() {
           </div>
 
           <div className="card home-quick-nav-panel">
-            <h2 className="panel-title">{t.home.quickNav}</h2>
+            <h2 className="panel-title">{language === "he" ? "הקטעים הכי מדוברים" : "Most discussed clips"}</h2>
 
             <div className="home-quick-nav-list">
-              {!currentUser ? (
-                <>
-                  <Link className="home-quick-link" href="/auth/login">
-                    <span className="home-quick-link-title">{t.home.quickLoginTitle}</span>
-                    <span className="home-quick-link-text">{t.home.quickLoginText}</span>
-                  </Link>
-                </>
+              {popularClips.length === 0 ? (
+                <p className="viewer-text">{language === "he" ? "עוד אין קטעים להצגה." : "No clips to show yet."}</p>
               ) : (
-                <>
-                  <Link className="home-quick-link" href="/profile">
-                    <span className="home-quick-link-title">{t.home.quickAccountTitle}</span>
-                    <span className="home-quick-link-text">{t.home.quickAccountText}</span>
+                popularClips.map((clip) => (
+                  <Link
+                    key={clip.id}
+                    className="home-quick-link"
+                    href={`/library/${clip.musical.slug}#clip-${clip.id}`}
+                  >
+                    <span className="home-quick-link-title">{clip.title}</span>
+                    <span className="home-quick-link-text">
+                      {clip.musical.title}
+                      {clip._count.comments > 0
+                        ? ` · ${clip._count.comments} ${language === "he" ? "תגובות" : "comments"}`
+                        : ""}
+                    </span>
                   </Link>
-
-                  {canRequestEditorAccess(currentUser) ? (
-                    <Link className="home-quick-link" href="/profile#account-access-summary">
-                      <span className="home-quick-link-title">{t.home.quickEditorTitle}</span>
-                      <span className="home-quick-link-text">{t.home.quickEditorText}</span>
-                    </Link>
-                  ) : null}
-
-                  {permissionFlags.musical_create ? (
-                    <Link className="home-quick-link" href="/admin/musicals/new">
-                      <span className="home-quick-link-title">{t.home.quickCreateMusicalTitle}</span>
-                      <span className="home-quick-link-text">{t.home.quickCreateMusicalText}</span>
-                    </Link>
-                  ) : null}
-
-                  {canAccessAnyAdminArea ? (
-                    <Link className="home-quick-link" href={adminHref}>
-                      <span className="home-quick-link-title">{adminLinkTitle}</span>
-                      <span className="home-quick-link-text">{adminLinkText}</span>
-                    </Link>
-                  ) : null}
-                </>
+                ))
               )}
             </div>
           </div>

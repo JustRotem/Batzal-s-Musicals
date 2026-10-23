@@ -20,11 +20,11 @@ const DELETE_CLIP_COPY = {
     confirm: "Delete Clip",
   },
   he: {
-    trigger: "מחק קליפ",
-    title: "מחיקת קליפ",
-    text: "האם למחוק את הקליפ הזה?",
+    trigger: "מחק קטע",
+    title: "מחיקת קטע",
+    text: "האם למחוק את הקטע הזה?",
     cancel: "ביטול",
-    confirm: "מחק קליפ",
+    confirm: "מחק קטע",
   },
 } as const;
 

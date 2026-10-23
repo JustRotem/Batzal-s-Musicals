@@ -24,22 +24,22 @@ export default function DeleteMusicalModal({
   const copy =
     language === "en"
       ? {
-          trigger: "Delete Musical",
-          title: "Delete Musical",
-          text: "This will also delete all of the musical's clips.",
-          target: "Musical to Delete",
-          confirmLabel: "To delete it, type the musical title",
+          trigger: "Delete Item",
+          title: "Delete Item",
+          text: "This will also delete all of the item's clips.",
+          target: "Item to Delete",
+          confirmLabel: "To delete it, type the item title",
           cancel: "Cancel",
-          confirm: "Delete Musical",
+          confirm: "Delete Item",
         }
       : {
-          trigger: "מחק מחזה",
-          title: "מחיקת מחזה",
-          text: "הפעולה תמחק גם את כל הקטעים של המחזה.",
-          target: "המחזה שיימחק",
-          confirmLabel: "כדי למחוק, הקלד את שם המחזה",
+          trigger: "מחק פריט",
+          title: "מחיקת פריט",
+          text: "הפעולה תמחק גם את כל הקטעים של הפריט.",
+          target: "הפריט שיימחק",
+          confirmLabel: "כדי למחוק, הקלד את שם הפריט",
           cancel: "ביטול",
-          confirm: "מחק מחזה",
+          confirm: "מחק פריט",
         };
 
   const canDelete = confirmationValue === musicalTitle;
@@ -196,8 +196,8 @@ export default function DeleteMusicalModal({
                       type="button"
                       className={`copy-title-button ${copied ? "is-copied" : ""}`}
                       onClick={handleCopyTitle}
-                      aria-label={language === "en" ? "Copy musical title" : "העתק שם מחזה"}
-                      title={language === "en" ? "Copy musical title" : "העתק שם מחזה"}
+                      aria-label={language === "en" ? "Copy item title" : "העתק שם פריט"}
+                      title={language === "en" ? "Copy item title" : "העתק שם פריט"}
                     >
                       {copied ? (
                         <svg viewBox="0 0 24 24" aria-hidden="true">

@@ -15,7 +15,8 @@ export type PermissionCategory =
   | "users"
   | "roles"
   | "editor-requests"
-  | "profile";
+  | "profile"
+  | "control-panel";
 
 export const PERMISSIONS = {
   musicalView: "musical_view",
@@ -31,6 +32,9 @@ export const PERMISSIONS = {
   roleManage: "role_manage",
   editorRequestReview: "editor_request_review",
   profileEdit: "profile_edit",
+  panelView: "panel_view",
+  panelControl: "panel_control",
+  panelPeople: "panel_people",
 } as const satisfies Record<string, PermissionName>;
 
 export const CONTENT_VIEW_PERMISSIONS = [
@@ -120,6 +124,21 @@ const AVAILABLE_PERMISSION_DEFINITIONS = [
     key: "profile.edit",
     category: "profile" as const,
   },
+  {
+    name: PERMISSIONS.panelView,
+    key: "panel.view",
+    category: "control-panel" as const,
+  },
+  {
+    name: PERMISSIONS.panelControl,
+    key: "panel.control",
+    category: "control-panel" as const,
+  },
+  {
+    name: PERMISSIONS.panelPeople,
+    key: "panel.people",
+    category: "control-panel" as const,
+  },
 ] as const;
 
 const PERMISSION_LABELS: Record<
@@ -127,33 +146,39 @@ const PERMISSION_LABELS: Record<
   Record<PermissionName, { label: string; description: string }>
 > = {
   he: {
-    musical_view: { label: "צפייה במחזות", description: "גישה לצפייה בתוכן מחזות בממשק המערכת." },
-    musical_create: { label: "יצירת מחזה", description: "יצירה וניהול ראשוני של מחזות חדשים." },
-    musical_edit: { label: "עריכת מחזה", description: "עדכון פרטי מחזה קיים." },
-    musical_delete: { label: "מחיקת מחזה", description: "מחיקת מחזה והקטעים המשויכים אליו." },
+    musical_view: { label: "צפייה בפריטים", description: "גישה לצפייה בתוכן פריטים בממשק המערכת." },
+    musical_create: { label: "יצירת פריט", description: "יצירה וניהול ראשוני של פריטים חדשים." },
+    musical_edit: { label: "עריכת פריט", description: "עדכון פרטי פריט קיים." },
+    musical_delete: { label: "מחיקת פריט", description: "מחיקת פריט והקטעים המשויכים אליו." },
     clip_view: { label: "צפייה בקטעים", description: "גישה לצפייה בקטעים ובתוכן הווידאו במערכת." },
-    clip_create: { label: "יצירת קליפ", description: "הוספת קטעים חדשים למחזה." },
-    clip_edit: { label: "עריכת קליפ", description: "עדכון פרטי קטעים קיימים." },
-    clip_delete: { label: "מחיקת קליפ", description: "הסרת קטעים מהמערכת." },
+    clip_create: { label: "יצירת קטע", description: "הוספת קטעים חדשים לפריט." },
+    clip_edit: { label: "עריכת קטע", description: "עדכון פרטי קטעים קיימים." },
+    clip_delete: { label: "מחיקת קטע", description: "הסרת קטעים מהמערכת." },
     user_view: { label: "צפייה במשתמשים", description: "גישה לצפייה ברשימות משתמשים ובפרטי ניהול בסיסיים." },
     user_manage: { label: "ניהול משתמשים", description: "ניהול חשבונות, חסימות ועדכוני תפקידים." },
     role_manage: { label: "ניהול הרשאות", description: "ניהול הרשאות תפקיד והרשאות ישירות." },
     editor_request_review: { label: "סקירת בקשות עורך", description: "אישור וטיפול בבקשות להרשאות עריכה." },
     profile_edit: { label: "עריכת פרופיל", description: "עדכון פרטי פרופיל, אבטחה ואמצעי שחזור אישיים." },
+    panel_view: { label: "כניסה ללוח הבקרה", description: "לראות את מצב האתרים והשרת בלוח הבקרה, בלי לשנות דבר." },
+    panel_control: { label: "שליטה בשרת", description: "להפעיל, לכבות ולהפעיל מחדש קונטיינרים ושירותים, ולקרוא לוגים ויומן פעולות." },
+    panel_people: { label: "ניהול משתמשים בלוח הבקרה", description: "לשנות דרגות, לחסום משתמשים ולנהל הרשאות מלוח הבקרה." },
   },
   en: {
-    musical_view: { label: "View musicals", description: "Access musical content across the app." },
-    musical_create: { label: "Create musical", description: "Create new musicals and start managing them." },
-    musical_edit: { label: "Edit musical", description: "Update the details of existing musicals." },
-    musical_delete: { label: "Delete musical", description: "Delete a musical and its related clips." },
+    musical_view: { label: "View items", description: "Access item content across the app." },
+    musical_create: { label: "Create item", description: "Create new items and start managing them." },
+    musical_edit: { label: "Edit item", description: "Update the details of existing musicals." },
+    musical_delete: { label: "Delete item", description: "Delete an item and its related clips." },
     clip_view: { label: "View clips", description: "Access clips and video content across the app." },
-    clip_create: { label: "Create clip", description: "Add new clips to a musical." },
+    clip_create: { label: "Create clip", description: "Add new clips to an item." },
     clip_edit: { label: "Edit clip", description: "Update the details of existing clips." },
     clip_delete: { label: "Delete clip", description: "Remove clips from the system." },
     user_view: { label: "View users", description: "Review user lists and basic account-management details." },
     user_manage: { label: "Manage users", description: "Manage accounts, blocks, and role changes." },
     role_manage: { label: "Manage permissions", description: "Manage role permissions and direct user permissions." },
     editor_request_review: { label: "Review editor requests", description: "Approve and handle requests for editing access." },
+    panel_view: { label: "Open the control panel", description: "See the status of the sites and the server in the control panel, without changing anything." },
+    panel_control: { label: "Control the server", description: "Start, stop and restart containers and services, and read logs and the action log." },
+    panel_people: { label: "Manage people in the control panel", description: "Change ranks, block users and manage permissions from the control panel." },
     profile_edit: { label: "Edit profile", description: "Update profile details, security, and personal recovery options." },
   },
 };
@@ -213,17 +238,25 @@ export function getPermissionDefinition(
 }
 
 // Permissions are shown grouped by the site they apply to.
-export type PermissionSite = "musicals" | "account";
+export type PermissionSite = "musicals" | "account" | "panel";
 
-export const PERMISSION_SITES: readonly PermissionSite[] = ["musicals", "account"];
+export const PERMISSION_SITES: readonly PermissionSite[] = ["musicals", "account", "panel"];
 
 export function getPermissionSite(category: PermissionCategory): PermissionSite {
+  if (category === "control-panel") {
+    return "panel";
+  }
+
   return category === "musicals" || category === "clips" ? "musicals" : "account";
 }
 
 export function getPermissionSiteLabel(site: PermissionSite, language: AppLanguage = "he") {
   if (site === "musicals") {
-    return language === "he" ? "מחזות זמר" : "Musicals";
+    return language === "he" ? "ספרייה" : "Library";
+  }
+
+  if (site === "panel") {
+    return language === "he" ? "לוח בקרה" : "Control panel";
   }
 
   return language === "he" ? "החשבון" : "Account";
@@ -240,7 +273,7 @@ export function getPermissionCategoryLabel(
 ) {
   switch (category) {
     case "musicals":
-      return language === "he" ? "מחזות" : "Musicals";
+      return language === "he" ? "פריטים" : "Musicals";
     case "clips":
       return language === "he" ? "קטעים" : "Clips";
     case "users":
@@ -251,6 +284,8 @@ export function getPermissionCategoryLabel(
       return language === "he" ? "בקשות עורך" : "Editor requests";
     case "profile":
       return language === "he" ? "פרופיל" : "Profile";
+    case "control-panel":
+      return language === "he" ? "הרשאות" : "Access";
   }
 }
 
@@ -369,6 +404,23 @@ export async function hasPermission(
   ]);
 
   return Boolean(rolePermission || userPermission);
+}
+
+// Every permission the user holds (role bundle plus direct grants); super admins hold all of them.
+export async function getEffectivePermissions(user: PermissionUser | null): Promise<PermissionName[]> {
+  if (!user) return [];
+
+  const all = AVAILABLE_PERMISSION_DEFINITIONS.map((definition) => definition.name as PermissionName);
+
+  if (isSuperAdminRole(user.role)) return all;
+
+  const held: PermissionName[] = [];
+
+  for (const name of all) {
+    if (await hasPermission(user, name)) held.push(name);
+  }
+
+  return held;
 }
 
 const getRolePermissionCount = cache(async () => db.rolePermission.count());

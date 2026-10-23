@@ -107,7 +107,6 @@ export function buildGoogleAuthorizationUrl(state: string) {
     scope: "openid email profile",
     access_type: "online",
     include_granted_scopes: "true",
-    prompt: "select_account",
     state,
   });
 
