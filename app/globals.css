@@ -7345,3 +7345,9 @@ html[data-env="dev"]::before { top: var(--safe-top); }
 @media (max-width: 560px) {
   .bz-menu, .bz-pop { position: fixed; top: calc(var(--safe-top, 0px) + var(--safe-gap, 0px) + 54px); inset-inline: 12px; width: auto; max-width: 340px; margin-inline: auto; }
 }
+
+/* on a phone the apps button sits at the far end of the header, away from the logo and the DEV badge */
+@media (max-width: 560px) {
+  .site-header-actions { display: flex; align-items: center; gap: 8px; }
+  .site-header-actions .bz-appswrap { order: 10; }
+}
