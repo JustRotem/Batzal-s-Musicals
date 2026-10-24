@@ -49,7 +49,7 @@ export default async function RootLayout({
   return (
     <html lang={language} dir={direction} data-theme={theme ?? undefined} data-env={isDevEnvironment() ? "dev" : undefined}>
       <head>
-        <link rel="stylesheet" href={`${process.env.BATZAL_STATIC_URL ?? "https://static.batzal.net"}/batzal-bar.css?v=16`} />
+        <link rel="stylesheet" href={`${process.env.BATZAL_STATIC_URL ?? "https://static.batzal.net"}/batzal-bar.css?v=16${isDevEnvironment() ? `&t=${Date.now()}` : ""}`} />
       </head>
       <body>
         <SiteHeader language={language} />
