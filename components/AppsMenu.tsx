@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { BATZAL_SITES } from "@/lib/batzal-sites";
+import type { BatzalSite } from "@/lib/batzal-sites";
 import type { AppLanguage } from "@/lib/i18n";
 
-export default function AppsMenu({ language, showPanel }: { language: AppLanguage; showPanel: boolean }) {
+export default function AppsMenu({ language, showPanel, sites }: { language: AppLanguage; showPanel: boolean; sites: BatzalSite[] }) {
   const [open, setOpen] = useState(false);
   const [host, setHost] = useState("");
   const wrapRef = useRef<HTMLDivElement>(null);
   const label = language === "he" ? "האתרים שלי" : "My sites";
   useEffect(() => {
-    setHost(window.location.hostname);
+    setHost(window.location.host);
   }, []);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function AppsMenu({ language, showPanel }: { language: AppLanguag
       </button>
       {open ? (
         <div className="bz-menu" role="menu">
-          {BATZAL_SITES.filter((site) => !site.adminOnly || showPanel).map((site) => (
+          {sites.filter((site) => !site.adminOnly || showPanel).map((site) => (
             <a
               key={site.host}
               href={site.href}

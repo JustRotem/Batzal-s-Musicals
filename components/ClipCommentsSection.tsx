@@ -90,6 +90,10 @@ function getCommentsCopy(language: AppLanguage) {
       moreEmojis: "All emoji",
       remove: "Delete Comment",
       hide: "Hide Comment",
+      confirmRemoveTitle: "Delete this comment?",
+      confirmRemoveText: "The comment is removed from the clip for everyone. This cannot be undone.",
+      confirmHideTitle: "Hide this comment?",
+      confirmHideText: "The comment disappears for everyone. You are hiding someone else's comment.",
       hiding: "Removing...",
       report: "Report",
       reportSent: "Report sent",
@@ -124,6 +128,10 @@ function getCommentsCopy(language: AppLanguage) {
     moreEmojis: "כל האימוג׳ים",
     remove: "מחק תגובה",
     hide: "הסתר תגובה",
+    confirmRemoveTitle: "למחוק את התגובה?",
+    confirmRemoveText: "התגובה תוסר מהקטע עבור כולם, ולא ניתן לשחזר אותה.",
+    confirmHideTitle: "להסתיר את התגובה?",
+    confirmHideText: "התגובה תיעלם עבור כולם. אתם מסתירים תגובה של מישהו אחר.",
     hiding: "מסיר...",
     report: "דווח",
     reportSent: "הדיווח נשלח",
@@ -155,6 +163,8 @@ export default function ClipCommentsSection({
   const [isReporting, startReporting] = useTransition();
   const [moderatingCommentId, setModeratingCommentId] = useState<string | null>(null);
   const [reportingCommentId, setReportingCommentId] = useState<string | null>(null);
+  // the comment someone asked to delete (or hide) and has not confirmed yet
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [reportReason, setReportReason] = useState(reportReasonOptions[0]?.value ?? "spam");
   const [reportDetails, setReportDetails] = useState("");
   const [reportedIds, setReportedIds] = useState<string[]>(reportedCommentIds);
@@ -451,7 +461,7 @@ export default function ClipCommentsSection({
                           type="button"
                           className="button-secondary button-small clip-comment-action-button"
                           disabled={isModerating}
-                          onClick={() => handleHide(comment.id)}
+                          onClick={() => setConfirmingId(comment.id)}
                         >
                           {isRemoving
                             ? copy.hiding
@@ -602,6 +612,54 @@ export default function ClipCommentsSection({
           })}
         </div>
       )}
+
+      {confirmingId && typeof document !== "undefined"
+        ? createPortal(
+            <div className="confirm-modal-overlay" onClick={() => setConfirmingId(null)}>
+              <div
+                className="card confirm-modal-card"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="comment-confirm-title"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <ModalCloseButton label={language === "he" ? "סגור" : "Close"} onClick={() => setConfirmingId(null)} />
+                {(() => {
+                  const own = comments.find((item) => item.id === confirmingId)?.authorId === currentUser?.id;
+
+                  return (
+                    <>
+                      <div className="confirm-modal-copy">
+                        <h2 id="comment-confirm-title" className="panel-title">
+                          {own ? copy.confirmRemoveTitle : copy.confirmHideTitle}
+                        </h2>
+                        <p className="viewer-text">{own ? copy.confirmRemoveText : copy.confirmHideText}</p>
+                      </div>
+                      <div className="confirm-modal-actions form-actions">
+                        <button type="button" className="button-secondary" onClick={() => setConfirmingId(null)}>
+                          {copy.cancel}
+                        </button>
+                        <button
+                          type="button"
+                          className="button-danger"
+                          onClick={() => {
+                            const id = confirmingId;
+
+                            setConfirmingId(null);
+                            handleHide(id);
+                          }}
+                        >
+                          {own ? copy.remove : copy.hide}
+                        </button>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
 
       {reportingCommentId && typeof document !== "undefined"
         ? createPortal(

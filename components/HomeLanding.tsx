@@ -5,16 +5,16 @@ import RecentQr from "@/components/RecentQr";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getAccountUrl, getMusicalsUrl, getQrUrl } from "@/lib/app-mode";
-import { BATZAL_SITES } from "@/lib/batzal-sites";
+import { getBatzalSites } from "@/lib/batzal-sites";
 import type { AppLanguage } from "@/lib/i18n";
 
 const text = (language: AppLanguage, he: string, en: string) => (language === "he" ? he : en);
 
 // What each site is for. The home page and the apps menu share the list in lib/batzal-sites.ts.
 const DESCRIPTIONS: Record<string, [string, string]> = {
-  "library.batzal.net": ["מחזות זמר, תווים ותכנים, עם רשימות, תגובות והתראות.", "Musicals, scores and content, with lists, comments and notifications."],
-  "qr.batzal.net": ["יוצרים קודי QR עם לוגו וצבעים, שומרים היסטוריה ומורידים כתמונה.", "Make QR codes with a logo and colours, keep a history and download them."],
-  "blog.batzal.net": ["כתיבה, רעיונות ועדכונים.", "Writing, ideas and updates."],
+  library: ["מחזות זמר, תווים ותכנים, עם רשימות, תגובות והתראות.", "Musicals, scores and content, with lists, comments and notifications."],
+  qr: ["יוצרים קודי QR עם לוגו וצבעים, שומרים היסטוריה ומורידים כתמונה.", "Make QR codes with a logo and colours, keep a history and download them."],
+  blog: ["כתיבה, רעיונות ועדכונים.", "Writing, ideas and updates."],
 };
 
 export default async function HomeLanding({ language }: { language: AppLanguage }) {
@@ -47,7 +47,7 @@ export default async function HomeLanding({ language }: { language: AppLanguage 
         .findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 6, select: { id: true, url: true, logo: true, logoSize: true } })
         .catch(() => [])
     : [];
-  const sites = BATZAL_SITES.filter((site) => !site.adminOnly && DESCRIPTIONS[site.host]);
+  const sites = getBatzalSites().filter((site) => !site.adminOnly && DESCRIPTIONS[site.id]);
 
   return (
     <main className="home-page">
@@ -68,14 +68,14 @@ export default async function HomeLanding({ language }: { language: AppLanguage 
       <h2>{text(language, "מה יש כאן", "What's here")}</h2>
       <div className="home-sites">
         {sites.map((site) => (
-          <a key={site.host} className="home-site" href={site.href}>
+          <a key={site.id} className="home-site" href={site.href}>
             <span className="icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d={site.icon} />
               </svg>
             </span>
             <b>{language === "he" ? site.he : site.en}</b>
-            <span className="desc">{text(language, DESCRIPTIONS[site.host][0], DESCRIPTIONS[site.host][1])}</span>
+            <span className="desc">{text(language, DESCRIPTIONS[site.id][0], DESCRIPTIONS[site.id][1])}</span>
             <span className="go">{text(language, "לכניסה ←", "Open →")}</span>
           </a>
         ))}

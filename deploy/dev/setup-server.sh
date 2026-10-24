@@ -37,21 +37,24 @@ sudo mkdir -p "$DEVROOT/public"
 if [ ! -d "$DEVROOT/public/uploads" ]; then sudo cp -a "$PROD/public/uploads" "$DEVROOT/public/uploads"; fi
 if [ ! -d /var/www/static-dev ]; then sudo cp -a /var/www/static /var/www/static-dev; fi
 
-echo "== browser password"
-if [ ! -f /etc/nginx/dev.htpasswd ]; then
-  PASS=$(openssl rand -base64 12 | tr -d '/+=' | cut -c1-14)
-  printf 'dev:%s\n' "$(openssl passwd -apr1 "$PASS")" | sudo tee /etc/nginx/dev.htpasswd >/dev/null
-  echo "$PASS" > .dev-password
-  chmod 600 .dev-password
-  echo "   user: dev   password: $PASS   (kept in ~/dev/.dev-password)"
+echo "== access key"
+if [ ! -f .dev-key ]; then
+  openssl rand -hex 16 > .dev-key
+  chmod 600 .dev-key
 fi
+KEY=$(cat .dev-key)
+echo "   one-time link for each browser: https://dev.batzal.net/__dev?key=$KEY"
 
 echo "== nginx"
 CONF=/etc/nginx/sites-available/dev.conf
 {
-  cat <<'EOT'
-# DEV network: *-dev.batzal.net. Everything is behind a browser password, except the few endpoints other DEV sites call
-# from the browser (they only answer with a session and carry nothing secret).
+  cat <<EOT
+# DEV network: *-dev.batzal.net. Everything needs the access cookie. A browser gets it once by opening
+# https://dev.batzal.net/__dev?key=... (the cookie is valid on every *-dev.batzal.net site for a year).
+map \$cookie_dev_access \$dev_authed {
+    default 0;
+    "$KEY" 1;
+}
 EOT
   proxy_block() { # name port extra
     cat <<EOT
@@ -66,28 +69,33 @@ server {
     proxy_read_timeout 600s;
     add_header X-Robots-Tag "noindex, nofollow" always;
 $3
-    location / {
-        auth_basic "Batzal DEV";
-        auth_basic_user_file /etc/nginx/dev.htpasswd;
-        proxy_pass http://127.0.0.1:$2;
-        proxy_http_version 1.1;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
+    # the one-time link that gives a browser access to every DEV site
+    location = /__dev {
+        if (\$arg_key = "$KEY") {
+            add_header Set-Cookie "dev_access=$KEY; Domain=.batzal.net; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=31536000" always;
+            return 302 /;
+        }
+        default_type text/plain;
+        return 403 "Wrong key.";
     }
-    # the endpoints other DEV sites call from the browser
-    location ~ ^/(api/(preferences|scores|logout|notifications)\$|uploads/avatars/) {
+    location / {
+        if (\$dev_authed = 0) {
+            default_type text/plain;
+            return 403 "This is the Batzal DEV site. Open your one-time access link first (see ~/dev/.dev-key on the server).";
+        }
         proxy_pass http://127.0.0.1:$2;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
 }
 EOT
   }
   proxy_block dev 3302 ""
-  proxy_block library-dev 3300 "    location /uploads/ { alias $DEVROOT/public/uploads/; expires 30d; auth_basic off; }"
+  proxy_block library-dev 3300 "    location /uploads/ { if (\$dev_authed = 0) { return 403; } alias $DEVROOT/public/uploads/; expires 30d; }"
   proxy_block account-dev 3301 ""
   proxy_block qr-dev 3303 ""
   proxy_block admin-dev 3304 ""

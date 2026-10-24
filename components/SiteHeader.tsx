@@ -4,6 +4,7 @@ import { getAppTitle } from "@/lib/app-config";
 import { getCurrentUser } from "@/lib/auth";
 import { getCurrentTheme } from "@/lib/theme-server";
 import AppsMenu from "@/components/AppsMenu";
+import { getBatzalSites } from "@/lib/batzal-sites";
 import BatzalAccountMenu from "@/components/BatzalAccountMenu";
 import BatzalLogo from "@/components/BatzalLogo";
 import HeaderSearch from "@/components/HeaderSearch";
@@ -59,7 +60,7 @@ export default async function SiteHeader({
         )}
 
         <div className="site-header-section site-header-actions">
-          <AppsMenu language={language} showPanel={showPanel} />
+          <AppsMenu language={language} showPanel={showPanel} sites={getBatzalSites()} />
           <BatzalAccountMenu
             user={
               user

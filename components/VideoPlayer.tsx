@@ -67,6 +67,17 @@ type CaptionTrack = { code: string; name: string };
 
 const CAPTION_PREFERENCE_KEY = "bz-caption-language";
 
+// A language is always shown in its own language (English, Español, עברית), whatever language the site is in.
+function nativeLanguageName(code: string) {
+  try {
+    const name = new Intl.DisplayNames([code], { type: "language" }).of(code);
+
+    return name && name !== code ? name.charAt(0).toLocaleUpperCase(code) + name.slice(1) : null;
+  } catch {
+    return null;
+  }
+}
+
 // The player only lists caption tracks after its captions module has loaded, so the list is read by polling.
 function readCaptionTracks(player: YouTubePlayer): CaptionTrack[] {
   const raw = player.getOption?.("captions", "tracklist");
@@ -84,7 +95,7 @@ function readCaptionTracks(player: YouTubePlayer): CaptionTrack[] {
 
     tracks.push({
       code: track.languageCode,
-      name: track.languageName || track.displayName || track.languageCode,
+      name: nativeLanguageName(track.languageCode) || track.languageName || track.displayName || track.languageCode,
     });
   }
 

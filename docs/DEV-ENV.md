@@ -11,7 +11,7 @@ A full copy of the Batzal network on the same server, for trying things before t
 | https://admin-dev.batzal.net | control panel (people and permissions only) |
 | https://static-dev.batzal.net | shared header files |
 
-Everything asks for a browser password first (user `dev`, the password is kept on the server in `~/dev/.dev-password`).
+Access is by a one-time link per browser (it is kept on the server in `~/dev/.dev-key`: `https://dev.batzal.net/__dev?key=<key>`). After opening it once, all the DEV sites work for a year without any password, and the sites link to each other inside DEV.
 
 ## How it works
 
