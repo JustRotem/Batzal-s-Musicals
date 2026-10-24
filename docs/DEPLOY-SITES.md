@@ -42,3 +42,19 @@ Firewall: port 3200 must stay closed to the outside (it is only on the bridge ad
 4. When all is well stop the old `qr-api` container and remove the old static copies of QR and the panel page (`/var/www/qr`, `/var/www/admin`).
 
 QR history kept in the old JSON files is not moved automatically; new codes are saved to the database.
+
+## Firewall note (done on 2026-10-24)
+
+The server firewall (ufw) rejects traffic from containers to the host. The panel container reaches its agent through:
+
+```
+sudo ufw allow from 172.21.0.0/16 to any port 3200 proto tcp comment "admin panel container to its host agent"
+```
+
+`172.21.0.0/16` is the subnet of the compose network `musicals_default`. If that network is ever recreated with another subnet (`docker network inspect musicals_default`), change the rule to match. The agent port is not open to anything else.
+
+## State after the switch (2026-10-24)
+
+- `batzal-home-app` (3002), `batzals-qr-app` (3003) and `batzals-admin-app` (3004) run next to the library and the account site; the old `qr-api` container is stopped but kept (`docker start qr-api`) for a rollback, together with the backups in `~/backup-2026-10-24-deploy` (database dump, settings, nginx sites, the old panel server, the rollback image `batzals-musicals:rollback-2026-10-24-1245`).
+- Old QR history was moved into the database (`QrHistory`).
+- Rollback: restore the nginx sites from the backup folder, restore `/opt/admin-panel/server.js` and `/etc/admin-panel.env`, `systemctl restart admin-panel`, `docker start qr-api`, `nginx -t && systemctl reload nginx`.
