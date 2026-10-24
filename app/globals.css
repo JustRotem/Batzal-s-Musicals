@@ -7327,9 +7327,9 @@ html[data-env="dev"]::before { top: var(--safe-top); }
 /* the status bar of an iPhone app is always white text: the area under it is a dark band whatever the theme, and the header content gets room below it */
 .site-header.bz-bar::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: var(--safe-top); background: #1f1e1d; }
 @media (max-width: 860px) {
-  :root { --safe-gap: 8px; --header-height: calc(56px + var(--safe-top) + var(--safe-gap)); --header-height-mobile: calc(140px + var(--safe-top) + var(--safe-gap)); }
+  :root { --safe-gap: 16px; --header-height: calc(56px + var(--safe-top) + var(--safe-gap)); --header-height-mobile: calc(140px + var(--safe-top) + var(--safe-gap)); }
   .site-header.bz-bar { padding-top: calc(var(--safe-top) + var(--safe-gap)); }
-  html[data-env="dev"]::before { top: calc(var(--safe-top) + var(--safe-gap)); }
+  html[data-env="dev"]::before { top: var(--safe-top); }
 }
 
 /* the clip player on a phone's full screen: the picture is the whole screen and the controls lie on top of it, hidden until a touch */
