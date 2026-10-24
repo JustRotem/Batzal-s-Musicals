@@ -58,3 +58,8 @@ export function getHomeUrl() {
 export function getQrUrl() {
   return readUrl("QR_URL", "https://qr.batzal.net", "http://localhost:4030");
 }
+
+// DEV runs the same code as production; APP_ENV=dev makes every page say so.
+export function isDevEnvironment() {
+  return process.env.APP_ENV?.trim() === "dev";
+}

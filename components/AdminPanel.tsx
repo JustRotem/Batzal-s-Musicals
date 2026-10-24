@@ -566,7 +566,6 @@ function DeleteUserWindow({ language, person, onClose, onConfirm }: { language: 
         placeholder={person.email}
       />
       <div className="adm-row">
-        <button type="button" className="button-secondary" onClick={onClose}>{T("ביטול", "Cancel")}</button>
         <button
           type="button"
           className="button-danger"

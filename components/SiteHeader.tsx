@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAccountUrl, getAppMode, getHomeUrl, getMusicalsUrl, isAccountMode } from "@/lib/app-mode";
+import { getAccountUrl, getAppMode, getHomeUrl, getMusicalsUrl, isAccountMode, isDevEnvironment } from "@/lib/app-mode";
 import { getAppTitle } from "@/lib/app-config";
 import { getCurrentUser } from "@/lib/auth";
 import { getCurrentTheme } from "@/lib/theme-server";
@@ -51,6 +51,7 @@ export default async function SiteHeader({
           </a>
           <span className="bz-sep" aria-hidden="true" />
           <Link href="/" className="bz-app">{getAppTitle(language)}</Link>
+          {isDevEnvironment() ? <span className="env-badge" title="DEV">DEV</span> : null}
         </div>
 
         {accountSite || getAppMode() !== "musicals" ? (

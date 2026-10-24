@@ -14,6 +14,7 @@ x-site: &site
   environment: &site-env
     DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@postgres:5432/musicals?schema=public
     PORT: 3000
+    APP_ENV: dev
     ACCOUNT_URL: https://account-dev.batzal.net
     MUSICALS_URL: https://library-dev.batzal.net
     HOME_URL: https://dev.batzal.net
