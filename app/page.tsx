@@ -3,7 +3,7 @@ import Link from "next/link";
 import HomeLanding from "@/components/HomeLanding";
 import AdminGate from "@/components/AdminGate";
 import QrMaker from "@/components/QrMaker";
-import { isAdminMode, isHomeMode, isQrMode } from "@/lib/app-mode";
+import { isAdminMode, isDevEnvironment, isHomeMode, isQrMode } from "@/lib/app-mode";
 import { getAppTitle } from "@/lib/app-config";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
@@ -15,7 +15,14 @@ import { formatMessage, getTranslations } from "@/lib/i18n";
 import { getCurrentLanguage } from "@/lib/i18n-server";
 import { getMusicalDescriptionText } from "@/lib/musical-description";
 
+// The title template of the layout does not reach the page of the same segment, so DEV is added here.
 export async function generateMetadata(): Promise<Metadata> {
+  const metadata = await buildMetadata();
+
+  return isDevEnvironment() && typeof metadata.title === "string" ? { ...metadata, title: `${metadata.title} · DEV` } : metadata;
+}
+
+async function buildMetadata(): Promise<Metadata> {
   const language = await getCurrentLanguage();
 
   if (isAdminMode()) {
