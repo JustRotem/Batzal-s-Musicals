@@ -7186,7 +7186,8 @@ body:has(.home-page)::after { bottom: -20vmax; inset-inline-start: -14vmax; back
 .home-confetti { will-change: transform; contain: layout paint; }
 
 /* while the onion is on the move nothing in the hero gets selected by accident; at rest the text can be copied */
-.home-hero.is-chasing, .home-hero.is-chasing * { -webkit-user-select: none; user-select: none; }
+html.is-chasing, html.is-chasing * { -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+html.is-chasing ::selection { background: transparent; }
 .home-mascot-wrap, .home-mascot { -webkit-touch-callout: none; }
 
 .home-counter { padding: 3px 12px; border-radius: 999px; background: rgb(75 112 245 / 0.16); color: var(--accent); font-size: 0.82rem; font-weight: 700; white-space: nowrap; animation: home-pop 0.2s ease-out; }

@@ -114,18 +114,17 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
     };
   }, []);
 
-  // While the onion is on the move the hero cannot be selected; a couple of seconds after it rests, copying works again.
+  // While the onion is on the move nothing on the page can be selected (a chase over the page must not look like selecting);
+  // a couple of seconds after it rests, copying works again.
   const chaseTimer = useRef<number | undefined>(undefined);
   const markChasing = useCallback(() => {
-    const hero = wrapRef.current?.closest(".home-hero");  // the whole hero is only marked while it moves
+    const root = document.documentElement;
 
-    if (!hero) return;
+    if (!root.classList.contains("is-chasing")) window.getSelection()?.removeAllRanges();
 
-    if (!hero.classList.contains("is-chasing")) window.getSelection()?.removeAllRanges();
-
-    hero.classList.add("is-chasing");
+    root.classList.add("is-chasing");
     window.clearTimeout(chaseTimer.current);
-    chaseTimer.current = window.setTimeout(() => hero.classList.remove("is-chasing"), 2500);
+    chaseTimer.current = window.setTimeout(() => root.classList.remove("is-chasing"), 2500);
   }, []);
 
   const flee = useCallback(
@@ -412,7 +411,7 @@ function useStandings(accountUrl: string, game: Game) {
 // The world is 900 wide on a computer and 420 wide on a phone (shown at the same width on the screen, so everything
 // is almost twice as big there), and a little slower to compensate for the shorter way the obstacles come.
 const WIDE = { w: 900, h: 260, ground: 210, pace: 1 };
-const COMPACT = { w: 420, h: 300, ground: 250, pace: 0.75 };
+const COMPACT = { w: 420, h: 300, ground: 250, pace: 0.65 };
 const L = { ...WIDE };
 const JUMP = 7.5;
 const GRAVITY = 0.42;
@@ -594,7 +593,8 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
     ctx.translate(75, onionY);
     ctx.scale(g.ducking ? 1.3 : 1, squash);
     ctx.font = "52px sans-serif";
-    ctx.fillText("🧅", -35, 0);
+    ctx.textAlign = "center";
+    ctx.fillText("🧅", 0, 0);
     ctx.restore();
 
     if (g.shield) {
@@ -604,8 +604,8 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
       ctx.beginPath();
 
       // the ring follows the onion: round when standing, wide and low when ducking, a bit taller in the air
-      if (g.ducking) ctx.ellipse(75, onionY - 14, 36, 19, 0, 0, Math.PI * 2);
-      else ctx.ellipse(75, onionY - 22 - (g.y > 4 ? 2 : 0), 31, g.y > 4 ? 34 : 31, 0, 0, Math.PI * 2);
+      if (g.ducking) ctx.ellipse(75, onionY - 15, 42, 23, 0, 0, Math.PI * 2);
+      else ctx.ellipse(75, onionY - 23 - (g.y > 4 ? 2 : 0), 37, g.y > 4 ? 40 : 37, 0, 0, Math.PI * 2);
 
       ctx.stroke();
       ctx.globalAlpha = 1;
@@ -616,7 +616,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
       ctx.lineWidth = 4;
       ctx.globalAlpha = 0.7;
       ctx.beginPath();
-      ctx.ellipse(75, onionY - 22, 40, 38, 0, 0, Math.PI * 2);
+      ctx.ellipse(75, onionY - 23, 44, 42, 0, 0, Math.PI * 2);
       ctx.stroke();
       ctx.globalAlpha = 1;
     }
@@ -771,7 +771,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
 
         g.obstacles.push(
           bird
-            ? { x: L.w + 20, kind: "bird", w: 52, h: 64, y: L.ground - 88 }
+            ? { x: L.w + 20, kind: "bird", w: 52, h: 64, y: L.ground - 88 - (L.w < 700 ? 26 : 0) }
             : { x: L.w + 20, kind: "rock", w: 34, h: 34, y: L.ground - 34 },
         );
         g.next = 260 + Math.random() * 300 + g.speed * 14;
