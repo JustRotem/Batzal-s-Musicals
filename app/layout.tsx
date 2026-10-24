@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "@fontsource/assistant/400.css";
 import "@fontsource/assistant/500.css";
 import "@fontsource/assistant/600.css";
@@ -14,6 +14,12 @@ import { getCurrentTheme } from "@/lib/theme-server";
 
 export const dynamic = "force-dynamic";
 
+// The colour of the phone's bar, and the page reaching under the notch (the header makes room for it)
+export const viewport: Viewport = {
+  themeColor: "#232221",
+  viewportFit: "cover",
+};
+
 export async function generateMetadata(): Promise<Metadata> {
   const language = await getCurrentLanguage();
   const appTitle = getAppTitle(language);
@@ -21,6 +27,9 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     // in DEV every tab says so
     title: isDevEnvironment() ? { default: `${appTitle} · DEV`, template: "%s · DEV" } : appTitle,
+    // opened from the home screen of a phone it is an app of its own
+    appleWebApp: { capable: true, title: appTitle, statusBarStyle: "black-translucent" },
+    other: { "apple-mobile-web-app-capable": "yes" },
     description:
       language === "he"
         ? `${appTitle} - ספריית פריטים, קטעים וניהול תוכן עם חוויית צפייה וחשבון מלאה.`

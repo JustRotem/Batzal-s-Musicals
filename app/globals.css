@@ -7268,3 +7268,26 @@ html[data-env="dev"]::before { content: ""; position: fixed; top: 0; inset-inlin
   .clip-segment-player[data-source-type="youtube"] .clip-segment-progress { flex: 1 1 100%; order: -1; min-width: 0; }
   .clip-segment-player[data-source-type="youtube"] .clip-segment-controls .button-small { min-height: 44px; min-width: 44px; }
 }
+
+/* the picture of the clip player is its own box: the whole frame on a computer, a 16:9 box with the controls under it on a phone */
+.clip-segment-picture { position: absolute; inset: 0; }
+@media (max-width: 720px) {
+  .clip-segment-player[data-source-type="youtube"] .clip-segment-frame { aspect-ratio: auto; overflow: visible; background: none; border-radius: 0; }
+  .clip-segment-player[data-source-type="youtube"] .clip-segment-picture { position: relative; inset: auto; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; background: #000; }
+  .clip-segment-player[data-source-type="youtube"] .clip-segment-controls-overlay { position: static; padding: 8px 0 0; pointer-events: auto; }
+}
+
+/* the player filling the screen by itself (iPhone, where Safari has no fullscreen for it) */
+.clip-segment-player[data-pseudo-fullscreen="true"] { position: fixed; inset: 0; z-index: 3000; background: #000; display: flex; flex-direction: column; justify-content: center; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+.clip-segment-player[data-pseudo-fullscreen="true"] .clip-segment-frame { aspect-ratio: auto; overflow: visible; background: none; border-radius: 0; }
+.clip-segment-player[data-pseudo-fullscreen="true"] .clip-segment-picture { position: relative; inset: auto; aspect-ratio: 16 / 9; width: min(100vw, calc((100dvh - 120px) * 16 / 9)); margin: 0 auto; background: #000; border-radius: 0; overflow: hidden; }
+.clip-segment-player[data-pseudo-fullscreen="true"] .clip-segment-controls-overlay { position: static; padding: 8px 10px 10px; pointer-events: auto; }
+.clip-segment-player[data-pseudo-fullscreen="true"] .clip-segment-controls { background: rgb(20 20 20 / 0.9); }
+
+/* opened from the home screen the page reaches under the notch: the header keeps its content below it */
+:root { --safe-top: env(safe-area-inset-top, 0px); }
+.site-header.bz-bar { padding-top: var(--safe-top); }
+:root { --header-height: calc(56px + var(--safe-top)); }
+@supports (padding: max(0px)) {
+  body { padding-bottom: env(safe-area-inset-bottom, 0px); }
+}

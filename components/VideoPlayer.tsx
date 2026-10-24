@@ -295,6 +295,8 @@ function VideoPlayer({
   const [skipDirection, setSkipDirection] = useState<"left" | "right" | null>(null);
   const [isTouchMode, setIsTouchMode] = useState(false);
   const [hasPlayed, setHasPlayed] = useState(false);
+  // iPhone Safari cannot make a page element fullscreen: the player then fills the screen itself
+  const [pseudoFullscreen, setPseudoFullscreen] = useState(false);
   const lastTapRef = useRef<{ time: number; x: number } | null>(null);
 
   const safeSkipAmount = Math.round(skipAmount);
@@ -593,6 +595,13 @@ function VideoPlayer({
   }, [isReady]);
 
   useEffect(() => {
+    return () => {
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  useEffect(() => {
     function handleFullscreenChange() {
       const isNowFullscreen = document.fullscreenElement === containerRef.current;
       setIsFullscreen(isNowFullscreen);
@@ -795,6 +804,28 @@ function VideoPlayer({
     }
 
     markActive();
+
+    // no fullscreen for page elements here (iPhone): the player covers the screen instead, and the page behind stays still
+    if (pseudoFullscreen) {
+      setPseudoFullscreen(false);
+      setIsFullscreen(false);
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+      window.setTimeout(() => containerRef.current?.focus({ preventScroll: true }), 0);
+
+      return;
+    }
+
+    if (typeof container.requestFullscreen !== "function") {
+      captureScroll();
+      setPseudoFullscreen(true);
+      setIsFullscreen(true);
+      document.documentElement.style.overflow = "hidden";
+      document.body.style.overflow = "hidden";
+      showCursorTemporarily();
+
+      return;
+    }
 
     if (document.fullscreenElement === container) {
       await document.exitFullscreen().catch(() => undefined);
@@ -1092,6 +1123,7 @@ function VideoPlayer({
       data-source-type="youtube"
       data-playing={isPlaying ? "true" : "false"}
       data-controls-visible={controlsVisible ? "true" : "false"}
+      data-pseudo-fullscreen={pseudoFullscreen ? "true" : "false"}
       data-cursor-hidden={
         !isTouchMode && isFullscreen && !controlsVisible && !isCursorVisible ? "true" : "false"
       }
@@ -1114,6 +1146,7 @@ function VideoPlayer({
       tabIndex={0}
     >
       <div className="video-frame clip-segment-frame">
+        <div className="clip-segment-picture">
         <div ref={mountRef} style={{ width: "100%", height: "100%" }} />
         <div
           className="clip-skip-side-indicator"
@@ -1153,6 +1186,7 @@ function VideoPlayer({
             onDoubleClick={handleSurfaceDoubleClick}
           />
         ) : null}
+        </div>
         <div className="clip-segment-controls-overlay" dir="ltr">
           <div className="clip-segment-controls" onClick={(event) => event.stopPropagation()}>
             <button

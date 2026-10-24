@@ -3,7 +3,10 @@ import { getAccountUrl, getAdminUrl, getAppMode } from "@/lib/app-mode";
 
 // The same code runs two sites. The account site only serves sign-in, settings, users and permissions;
 // the musicals site serves the musicals and sends account pages to the account site.
+// what a phone needs to install the site as an app
+const PWA_PATHS = [/^\/manifest\.webmanifest$/, /^\/icon-maskable\.png$/];
 const ACCOUNT_SITE_PATHS = [
+  ...PWA_PATHS,
   /^\/$/,
   /^\/auth\/(login|blocked|forbidden|pending)$/,
   /^\/auth\/google\/(start|callback)$/,
@@ -15,7 +18,7 @@ const ACCOUNT_SITE_PATHS = [
 
 // Account pages that must not exist on the musicals site.
 // The home page serves one page and signs people in through the account site, like the library does.
-const HOME_SITE_PATHS = [/^\/$/, /^\/auth\/account\/(start|callback)$/, /^\/auth\/(login|blocked|forbidden|pending)$/, /^\/api\/health$/];
+const HOME_SITE_PATHS = [...PWA_PATHS, /^\/$/, /^\/auth\/account\/(start|callback)$/, /^\/auth\/(login|blocked|forbidden|pending)$/, /^\/api\/health$/];
 
 // The QR maker: one page, the sign-in routes and its history.
 const QR_SITE_PATHS = [...HOME_SITE_PATHS, /^\/api\/qr\/history(\/[^/]+)?$/];
@@ -95,5 +98,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|icon-maskable.png).*)"],
 };
