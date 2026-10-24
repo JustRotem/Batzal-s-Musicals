@@ -244,8 +244,6 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
     let guardUntil = 0;
 
     const onDown = (event: PointerEvent) => {
-      if (event.pointerType !== "touch") return;
-
       const wrap = wrapRef.current;
       const st = state.current;
 
@@ -256,11 +254,17 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
         if (dist < 140 + st.caught * 15) guardUntil = performance.now() + 900;
       }
 
-      onMove(event);
+      if (event.pointerType === "touch") onMove(event);
     };
 
     const onClick = (event: MouseEvent) => {
-      if (performance.now() > guardUntil || wrapRef.current?.contains(event.target as Node)) return;
+      const now = performance.now();
+      const st = state.current;
+
+      // right after the onion ran away (from a finger or from the mouse) a press lands on whatever it left behind: ignore it
+      const recentlyFled = !st.tired && now - st.lastFlee < 800;
+
+      if ((now > guardUntil && !recentlyFled) || wrapRef.current?.contains(event.target as Node)) return;
 
       event.preventDefault();
       event.stopPropagation();
