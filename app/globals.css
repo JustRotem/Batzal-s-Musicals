@@ -7221,3 +7221,8 @@ body:has(.home-page)::after { bottom: -20vmax; inset-inline-start: -14vmax; back
 
 /* the reaction window is as wide as what is in it, with no empty strip */
 .reaction-popover { min-width: 0; width: max-content; }
+
+/* the delete mark of a saved QR code: a clear round button on the corner of the card, not on the white code */
+.qr-hist-item .qr-del { position: absolute; top: -9px; inset-inline-start: -9px; z-index: 3; width: 26px; height: 26px; padding: 0; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--card-border); background: var(--card); color: var(--text); cursor: pointer; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35); transition: background 0.15s, color 0.15s, transform 0.15s; }
+.qr-hist-item .qr-del svg { width: 12px; height: 12px; }
+.qr-hist-item .qr-del:hover { background: #ef4444; border-color: #ef4444; color: #fff; transform: scale(1.1); }
