@@ -68,6 +68,7 @@ server {
     client_max_body_size 300M;
     proxy_read_timeout 600s;
     add_header X-Robots-Tag "noindex, nofollow" always;
+    default_type text/plain;
 $3
     # the one-time link that gives a browser access to every DEV site
     location = /__dev {
@@ -75,12 +76,10 @@ $3
             add_header Set-Cookie "dev_access=$KEY; Domain=.batzal.net; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=31536000" always;
             return 302 /;
         }
-        default_type text/plain;
         return 403 "Wrong key.";
     }
     location / {
         if (\$dev_authed = 0) {
-            default_type text/plain;
             return 403 "This is the Batzal DEV site. Open your one-time access link first (see ~/dev/.dev-key on the server).";
         }
         proxy_pass http://127.0.0.1:$2;
