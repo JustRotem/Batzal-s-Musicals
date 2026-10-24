@@ -126,3 +126,8 @@ a.bz-app:hover { color:var(--bz-text,inherit); }
 @media (max-width: 560px) {
   .bz-menu, .bz-pop { position: fixed; top: calc(var(--safe-top, 0px) + var(--safe-gap, 0px) + 54px); inset-inline: 12px; width: auto; max-width: 340px; margin-inline: auto; }
 }
+
+/* every button of the header group is centred on the same line, whatever mix of buttons is shown (guest, signed in, with rank and notifications) */
+.site-header-actions, .bz-actions, .bz-acct { align-items: center; }
+.bz-appswrap, .bz-bellwrap, .bz-rankwrap, .bz-signin-wrap { display: flex; align-items: center; min-height: 40px; }
+.bz-apps, .bz-bell, .bz-guest-btn, .bz-rank, .bz-acct-btn { margin: 0; vertical-align: middle; }
