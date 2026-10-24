@@ -11,3 +11,7 @@ docker-compose*.yml
 .env.production.local
 tsconfig.tsbuildinfo
 docs
+
+# not part of the web app image
+agent
+shared

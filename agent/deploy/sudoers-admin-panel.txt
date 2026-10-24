@@ -1,0 +1,25 @@
+# admin-panel: exact systemctl commands only (managed file)
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl reload nginx.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl restart nginx.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl start mariadb.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl stop mariadb.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl restart mariadb.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl start php8.0-fpm.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl stop php8.0-fpm.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl restart php8.0-fpm.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl start php8.1-fpm.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl stop php8.1-fpm.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl restart php8.1-fpm.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl start php8.3-fpm.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl stop php8.3-fpm.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl restart php8.3-fpm.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl start php8.4-fpm.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl stop php8.4-fpm.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl restart php8.4-fpm.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl start redis-server.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl stop redis-server.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl restart redis-server.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl start pteroq.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl stop pteroq.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl restart pteroq.service
+admin-panel ALL=(root) NOPASSWD: /usr/bin/systemctl restart wings.service

@@ -1,0 +1,19 @@
+[Unit]
+Description=admin.batzal.net control panel API
+After=network.target docker.service
+
+[Service]
+User=admin-panel
+Group=admin-panel
+SupplementaryGroups=docker systemd-journal
+EnvironmentFile=/etc/admin-panel.env
+Environment=AUDIT_FILE=/var/lib/admin-panel/audit.log
+ExecStart=/opt/node/bin/node /opt/admin-panel/server.js
+Restart=on-failure
+RestartSec=3
+ProtectHome=true
+PrivateTmp=true
+ProtectKernelModules=true
+
+[Install]
+WantedBy=multi-user.target
