@@ -94,23 +94,23 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
   // Where the onion may roam: the whole hero area, below the header.
   const roam = useCallback(() => {
     const wrap = wrapRef.current;
-    const hero = wrap?.closest(".home-mascot-zone") as HTMLElement | null;
 
-    if (!wrap || !hero) return null;
+    if (!wrap) return null;
 
+    // the whole visible screen below the header: the onion never goes where it cannot be seen or pressed
     const box = wrap.getBoundingClientRect();
-    const area = hero.getBoundingClientRect();
     const naturalLeft = box.left - offsetRef.current.x;
     const naturalTop = box.top - offsetRef.current.y;
     const header = document.querySelector(".site-header")?.getBoundingClientRect().bottom ?? 0;
-    const top = Math.max(area.top, header + 6);
+    const top = Math.max(8, header + 8);
+    const room = 8;
 
     return {
       box,
-      minX: area.left - naturalLeft,
-      maxX: area.right - naturalLeft - box.width,
+      minX: room - naturalLeft,
+      maxX: window.innerWidth - room - naturalLeft - box.width,
       minY: top - naturalTop,
-      maxY: area.bottom - naturalTop - box.height,
+      maxY: window.innerHeight - room - naturalTop - box.height,
     };
   }, []);
 
@@ -240,9 +240,17 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
       if (dist < 105 + st.caught * 15) flee(event.clientX, event.clientY);
     };
 
-    document.addEventListener("pointermove", onMove);
+    const onDown = (event: PointerEvent) => {
+      if (event.pointerType === "touch") onMove(event);
+    };
 
-    return () => document.removeEventListener("pointermove", onMove);
+    document.addEventListener("pointermove", onMove);
+    document.addEventListener("pointerdown", onDown);
+
+    return () => {
+      document.removeEventListener("pointermove", onMove);
+      document.removeEventListener("pointerdown", onDown);
+    };
   }, [flee]);
 
   useEffect(() => {
@@ -378,8 +386,8 @@ function useStandings(accountUrl: string, game: Game) {
 const WIDE = { w: 900, h: 260, ground: 210, pace: 1 };
 const COMPACT = { w: 420, h: 300, ground: 250, pace: 0.75 };
 const L = { ...WIDE };
-const JUMP = 10.4;
-const GRAVITY = 0.75;
+const JUMP = 7.5;
+const GRAVITY = 0.42;
 const DUCK_MAX = 650;
 const DUCK_REST = 750;
 const HELP_KEY = "bz-home-runner-help";
@@ -429,6 +437,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
   const [phase, setPhase] = useState<"idle" | "running" | "paused" | "over">("idle");
   // The instructions show before the first run, until someone asks not to see them again. The "i" button brings them back.
   const [helpOpen, setHelpOpen] = useState(true);
+  const touchRef = useRef<{ y: number; swiped: boolean } | null>(null);
   const [compact, setCompact] = useState(false);
   const { board, submit } = useStandings(accountUrl, "runner");
 
@@ -702,7 +711,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
       g.y = Math.max(0, g.y + g.vy * world);
 
       if (g.y === 0) {
-        if (g.vy < -6) burst(55, L.ground, 6, ["#c9c4bb", "#8a857d"], 2);
+        if (g.vy < -4) burst(55, L.ground, 6, ["#c9c4bb", "#8a857d"], 2);
 
         g.vy = 0;
       }
@@ -759,7 +768,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
       const bottom = L.ground - g.y;
 
       for (const obstacle of g.obstacles) {
-        const hitsX = obstacle.x + 6 < 90 && obstacle.x + obstacle.w - 6 > 60;
+        const hitsX = obstacle.x + 8 < 88 && obstacle.x + obstacle.w - 8 > 62;
         const hitsY = obstacle.y + 6 < bottom && obstacle.y + obstacle.h - 4 > top;
 
         if (!hitsX || !hitsY) continue;
@@ -920,7 +929,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
       if (g.run && event.key === "ArrowDown") {
         g.duckKey = true;
 
-        if (g.y > 0) g.vy = Math.min(g.vy, -9);
+        if (g.y > 0) g.vy = Math.min(g.vy, -7);
       }
     };
     const onKeyUp = (event: KeyboardEvent) => {
@@ -972,7 +981,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
       <div className="home-run-stage">
         <canvas
           ref={canvasRef}
-          className="home-run"
+          className={`home-run${phase === "running" ? " is-running" : ""}`}
           width={compact ? COMPACT.w : WIDE.w}
           height={compact ? COMPACT.h : WIDE.h}
           style={{ aspectRatio: compact ? `${COMPACT.w} / ${COMPACT.h}` : `${WIDE.w} / ${WIDE.h}` }}
@@ -980,19 +989,42 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
           onPointerDown={(event) => {
             event.currentTarget.focus();
 
-            // on a touch screen: the left third of the game ducks, the rest jumps
-            if (event.pointerType === "touch" && game.current.run) {
-              const box = event.currentTarget.getBoundingClientRect();
+            if (event.pointerType === "touch") {
+              // a tap jumps (when the finger lifts), a swipe down ducks
+              touchRef.current = { y: event.clientY, swiped: false };
+              (event.currentTarget as HTMLCanvasElement).setPointerCapture?.(event.pointerId);
 
-              if (event.clientX - box.left < box.width / 3) {
-                game.current.duckKey = true;
-                window.setTimeout(() => (game.current.duckKey = false), 450);
-
-                return;
-              }
+              return;
             }
 
             jump();
+          }}
+          onPointerMove={(event) => {
+            const touch = touchRef.current;
+
+            if (event.pointerType !== "touch" || !touch || touch.swiped || !game.current.run) return;
+
+            if (event.clientY - touch.y > 16) {
+              touch.swiped = true;
+              game.current.duckKey = true;
+
+              if (game.current.y > 0) game.current.vy = Math.min(game.current.vy, -7);
+            }
+          }}
+          onPointerUp={(event) => {
+            const touch = touchRef.current;
+
+            touchRef.current = null;
+
+            if (event.pointerType !== "touch" || !touch) return;
+
+            game.current.duckKey = false;
+
+            if (!touch.swiped) jump();
+          }}
+          onPointerCancel={() => {
+            touchRef.current = null;
+            game.current.duckKey = false;
           }}
         />
         {phase === "idle" && !helpOpen ? <div className="home-startnote">{text(language, "לחצו על המסך כדי להתחיל", "Click the screen to start")}</div> : null}
@@ -1007,7 +1039,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
             <strong>{text(language, "איך משחקים", "How to play")}</strong>
             <ul onClick={(event) => event.stopPropagation()}>
               <li>⬆️ {text(language, "קפיצה: רווח, חץ למעלה או לחיצה על המסך", "Jump: space, up arrow or tap the screen")}</li>
-              <li>⬇️ {text(language, "התכופפות מתחת לנשרים 🦅: חץ למטה (רק לרגע!), במגע: השליש השמאלי של המסך", "Duck under eagles 🦅: down arrow (only for a moment!), on touch: the left third of the screen")}</li>
+              <li>⬇️ {text(language, "התכופפות מתחת לנשרים 🦅: חץ למטה (רק לרגע!), במגע: החלקה למטה על המשחק", "Duck under eagles 🦅: down arrow (only for a moment!), on touch: swipe down on the game")}</li>
               <li>🪨 {text(language, "לקפוץ מעל סלעים", "Jump over rocks")}</li>
               <li>⭐ {text(language, "מגן שסופג מכה", "A shield that takes one hit")} · ⚡ {text(language, "טורבו ששובר הכול", "Turbo that smashes everything")} · 🐌 {text(language, "הילוך איטי", "Slow motion")}</li>
             </ul>

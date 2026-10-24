@@ -1496,7 +1496,7 @@ textarea:focus-visible {
 .site-header-inner {
   width: 100%;
   max-width: 1180px;
-  min-height: calc(var(--header-height) - 1px);
+  min-height: 55px;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas: "brand search actions";
@@ -5671,7 +5671,7 @@ html[dir="ltr"] input[type="email"]::placeholder {
   }
 
   .site-header-inner {
-    min-height: var(--header-height-mobile);
+    min-height: 140px;
     padding: 12px 0;
     align-items: stretch;
     justify-content: center;
@@ -7048,7 +7048,7 @@ html[dir="ltr"] input[type="email"]::placeholder {
 .home-hero { padding-top: 56px; }
 @media (max-width: 860px) { .home-page, .qr-page { padding-top: calc(var(--header-height) + 8px); } }
 .site-header:has(.site-header-search:empty) { min-height: var(--header-height); }
-.site-header:has(.site-header-search:empty) .site-header-inner { min-height: calc(var(--header-height) - 1px); padding: 0; align-items: center; }
+.site-header:has(.site-header-search:empty) .site-header-inner { min-height: 55px; padding: 0; align-items: center; }
 
 /* the onion runs away */
 .home-hero { position: relative; min-height: 360px; }
@@ -7290,4 +7290,36 @@ html[data-env="dev"]::before { content: ""; position: fixed; top: 0; inset-inlin
 :root { --header-height: calc(56px + var(--safe-top)); }
 @supports (padding: max(0px)) {
   body { padding-bottom: env(safe-area-inset-bottom, 0px); }
+}
+
+:root { --header-height-mobile: calc(140px + var(--safe-top)); }
+/* the DEV stripe sits below the phone's status bar when the site is opened from the home screen */
+html[data-env="dev"]::before { top: var(--safe-top); }
+
+/* the clip player covering the screen on an iPhone: the parts of the page around it must not trap it
+   (a transform, filter or a stacking level on an ancestor would keep a fixed player inside its card, under the header) */
+:has(> .clip-segment-player[data-pseudo-fullscreen="true"]),
+:has(.clip-segment-player[data-pseudo-fullscreen="true"]) {
+  transform: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  perspective: none !important;
+  contain: none !important;
+  will-change: auto !important;
+  animation: none !important;
+  z-index: 5000 !important;
+}
+.clip-segment-player[data-pseudo-fullscreen="true"] { z-index: 5000; height: 100dvh; }
+
+/* the running onion: swipes belong to the game while it runs */
+.home-run { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.home-run.is-running { touch-action: none; }
+
+/* the escaping onion is free on the whole screen and above the content */
+.home-mascot-zone { flex: 0 0 auto; min-height: 150px; }
+.home-mascot-wrap { position: relative; z-index: 60; }
+@media (max-width: 700px) {
+  .home-hero { flex-direction: column; align-items: stretch; }
+  .home-mascot-zone { min-height: 150px; }
 }
