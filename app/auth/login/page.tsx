@@ -50,44 +50,44 @@ export default async function LoginPage(props: LoginPageProps) {
 
   const googleAuthEnabled = accountSite ? isGoogleAuthEnabled() : true;
 
+  const closeHref = accountSite ? getMusicalsUrl() : "/";
+
+  // A floating window over the site, not a page of its own: pressing outside it or the X goes back to the site.
   return (
-    <main className="page-shell">
-      <div className="orb one" />
-      <div className="orb two" />
+    <div className="confirm-modal-overlay login-window-overlay">
+      <Link className="login-window-backdrop" href={closeHref} aria-label={language === "he" ? "סגור" : "Close"} tabIndex={-1} />
 
-      <div className="container">
-        <section className="card auth-card">
-          <h1 className="viewer-title">{language === "he" ? "ההתחברות לא הושלמה" : "Sign-in did not complete"}</h1>
+      <section className="confirm-modal-card card login-window" role="dialog" aria-modal="true" aria-labelledby="login-window-title">
+        <Link className="modal-x" href={closeHref} aria-label={language === "he" ? "סגור" : "Close"} title={language === "he" ? "סגור" : "Close"}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </Link>
 
-          <div className="auth-container">
-            <div className="form-grid auth-form auth-form-compact auth-form-login">
-              {googleAuthEnabled ? (
-                <GoogleAuthButton
-                  language={language}
-                  next={next}
-                  href={accountSite ? undefined : accountStartHref}
-                />
-              ) : (
-                <p className="form-message error" role="alert">
-                  {errorMessages["google-unavailable"]}
-                </p>
-              )}
+        <h1 id="login-window-title" className="panel-title">
+          {language === "he" ? "ההתחברות לא הושלמה" : "Sign-in did not complete"}
+        </h1>
 
-              <div className="auth-form-feedback" aria-live="polite">
-                {errorMessage ? (
-                  <p className="form-message error" role="alert">
-                    {errorMessage}
-                  </p>
-                ) : null}
-              </div>
+        {errorMessage ? (
+          <p className="form-message error" role="alert">
+            {errorMessage}
+          </p>
+        ) : null}
 
-              <Link className="button-secondary" href={accountSite ? getMusicalsUrl() : "/"}>
-                {language === "he" ? "המשך כאורח" : "Continue as guest"}
-              </Link>
-            </div>
-          </div>
-        </section>
-      </div>
-    </main>
+        <div className="login-window-actions">
+          {googleAuthEnabled ? (
+            <GoogleAuthButton language={language} next={next} href={accountSite ? undefined : accountStartHref} />
+          ) : (
+            <p className="form-message error" role="alert">
+              {errorMessages["google-unavailable"]}
+            </p>
+          )}
+
+          <Link className="button-secondary" href={closeHref}>
+            {language === "he" ? "המשך כאורח" : "Continue as guest"}
+          </Link>
+        </div>
+      </section>
+    </div>
   );
 }

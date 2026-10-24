@@ -7209,3 +7209,12 @@ body:has(.home-page)::after { bottom: -20vmax; inset-inline-start: -14vmax; back
 .home-help-hide:hover { color: var(--text); }
 .home-over { cursor: pointer; }
 .home-over small { color: var(--muted); }
+
+/* the sign-in problem window: floats over the site, a click outside it closes it */
+.login-window-overlay { align-items: center; }
+.login-window-backdrop { position: absolute; inset: 0; }
+.login-window { position: relative; gap: 16px; padding: 28px 24px 24px; }
+.login-window .panel-title { margin: 0; padding-inline-end: 36px; font-size: 1.35rem; }
+.login-window .form-message { margin: 0; font-size: 1rem; line-height: 1.6; }
+.login-window-actions { display: grid; gap: 10px; }
+.login-window-actions .google-auth-button, .login-window-actions .button-secondary { width: 100%; justify-content: center; text-align: center; text-decoration: none; }

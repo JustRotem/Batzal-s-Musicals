@@ -86,11 +86,11 @@ $3
 }
 EOT
   }
-  proxy_block dev 3102 ""
-  proxy_block library-dev 3100 "    location /uploads/ { alias $DEVROOT/public/uploads/; expires 30d; auth_basic off; }"
-  proxy_block account-dev 3101 ""
-  proxy_block qr-dev 3103 ""
-  proxy_block admin-dev 3104 ""
+  proxy_block dev 3302 ""
+  proxy_block library-dev 3300 "    location /uploads/ { alias $DEVROOT/public/uploads/; expires 30d; auth_basic off; }"
+  proxy_block account-dev 3301 ""
+  proxy_block qr-dev 3303 ""
+  proxy_block admin-dev 3304 ""
   cat <<EOT
 server {
     server_name static-dev.batzal.net;
