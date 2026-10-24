@@ -397,7 +397,8 @@ function VideoPlayer({
     setControlsVisible(true);
     clearControlsHideTimeout();
 
-    if (isPlaying) {
+    // on the phone's full screen the bar goes away after a few seconds even when paused: the picture is the whole screen
+    if (isPlaying || pseudoFullscreen) {
       controlsHideTimeoutRef.current = window.setTimeout(() => {
         setControlsVisible(false);
       }, isTouchMode ? 3200 : 1800);
