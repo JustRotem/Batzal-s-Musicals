@@ -41,7 +41,7 @@ export default function RecentQr({ items, qrUrl, language }: { items: Item[]; qr
   return (
     <div className="home-recent">
       {items.map((item) => (
-        <a key={item.id} className="home-recent-item" href={qrUrl} title={item.url}>
+        <a key={item.id} className="home-recent-item" href={`${qrUrl}/?code=${item.id}`} title={item.url}>
           <Code item={item} />
           <span dir="ltr">{item.url.replace(/^https?:\/\//, "")}</span>
         </a>

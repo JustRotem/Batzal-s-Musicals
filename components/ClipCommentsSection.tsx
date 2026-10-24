@@ -635,10 +635,7 @@ export default function ClipCommentsSection({
                         </h2>
                         <p className="viewer-text">{own ? copy.confirmRemoveText : copy.confirmHideText}</p>
                       </div>
-                      <div className="confirm-modal-actions form-actions">
-                        <button type="button" className="button-secondary" onClick={() => setConfirmingId(null)}>
-                          {copy.cancel}
-                        </button>
+                      <div className="button-row" style={{ marginTop: 0 }}>
                         <button
                           type="button"
                           className="button-danger"

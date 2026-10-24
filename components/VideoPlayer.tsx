@@ -102,6 +102,29 @@ function readCaptionTracks(player: YouTubePlayer): CaptionTrack[] {
   return tracks;
 }
 
+// The YouTube player takes the focus when its modules load, and the browser then scrolls the page to the player ("it
+// jumps back to the middle while I scroll"). This puts the page back unless the person has just scrolled on purpose.
+let lastScrollInput = 0;
+
+function noteScrollInput() {
+  lastScrollInput = Date.now();
+}
+
+function keepScrollPosition(action: () => void) {
+  const x = window.scrollX;
+  const y = window.scrollY;
+
+  action();
+
+  const check = () => {
+    if (Date.now() - lastScrollInput > 700 && Math.abs(window.scrollY - y) > 30) {
+      window.scrollTo(x, y);
+    }
+  };
+
+  for (const delay of [30, 150, 400, 900]) window.setTimeout(check, delay);
+}
+
 let youTubeIframeApiPromise: Promise<void> | null = null;
 
 function loadYouTubeIframeApi() {
@@ -398,12 +421,24 @@ function VideoPlayer({
     }
 
     if (code) {
-      player.loadModule?.("captions");
-      player.setOption?.("captions", "track", { languageCode: code });
+      keepScrollPosition(() => {
+        player.loadModule?.("captions");
+        player.setOption?.("captions", "track", { languageCode: code });
+      });
     } else {
       player.unloadModule?.("captions");
     }
   }
+
+  useEffect(() => {
+    const events = ["wheel", "touchmove", "keydown", "pointerdown"] as const;
+
+    for (const name of events) window.addEventListener(name, noteScrollInput, { passive: true });
+
+    return () => {
+      for (const name of events) window.removeEventListener(name, noteScrollInput);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -437,6 +472,11 @@ function VideoPlayer({
         events: {
           onReady: () => {
             const readyPlayer = player as unknown as YouTubePlayer;
+
+            if (!isTouchMode) {
+              (player as unknown as { getIframe?: () => HTMLIFrameElement }).getIframe?.()?.setAttribute("inert", "");
+            }
+
             const duration = readyPlayer.getDuration() || 0;
             const initialTime = start;
             const shouldResumePlayback = autoPlay;
@@ -520,7 +560,7 @@ function VideoPlayer({
       }
 
       tries += 1;
-      player.loadModule("captions");
+      keepScrollPosition(() => player.loadModule("captions"));
       const tracks = readCaptionTracks(player);
 
       if (tracks.length > 0 || tries >= 12) {

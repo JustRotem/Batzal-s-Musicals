@@ -7218,3 +7218,6 @@ body:has(.home-page)::after { bottom: -20vmax; inset-inline-start: -14vmax; back
 .login-window .form-message { margin: 0; font-size: 1rem; line-height: 1.6; }
 .login-window-actions { display: grid; gap: 10px; }
 .login-window-actions .google-auth-button, .login-window-actions .button-secondary { width: 100%; justify-content: center; text-align: center; text-decoration: none; }
+
+/* the reaction window is as wide as what is in it, with no empty strip */
+.reaction-popover { min-width: 0; width: max-content; }

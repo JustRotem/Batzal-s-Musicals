@@ -222,6 +222,27 @@ export default function QrMaker({ language, signedIn }: { language: AppLanguage;
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Coming from a code on the home page (?code=<id>): that code opens, ready to copy or download
+  useEffect(() => {
+    if (items.length === 0) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    if (!code) return;
+
+    const item = items.find((entry) => entry.id === code);
+
+    window.history.replaceState(null, "", window.location.pathname);
+
+    if (item) {
+      setValue(item.url);
+      setLogoSize(item.logoSize);
+      setLogo(item.logo);
+      setOriginal(item.logo);
+    }
+  }, [items]);
+
   const removeItem = async (id: string) => {
     const response = await fetch(`/api/qr/history/${id}`, { method: "DELETE", credentials: "same-origin" });
 
