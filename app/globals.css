@@ -7323,3 +7323,20 @@ html[data-env="dev"]::before { top: var(--safe-top); }
   .home-hero { flex-direction: column; align-items: stretch; }
   .home-mascot-zone { min-height: 150px; }
 }
+
+/* the status bar of an iPhone app is always white text: the area under it is a dark band whatever the theme, and the header content gets room below it */
+.site-header.bz-bar::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: var(--safe-top); background: #1f1e1d; }
+@media (display-mode: standalone) {
+  :root { --safe-gap: 10px; }
+  .site-header.bz-bar { padding-top: calc(var(--safe-top) + var(--safe-gap)); }
+  :root { --header-height: calc(56px + var(--safe-top) + var(--safe-gap)); --header-height-mobile: calc(140px + var(--safe-top) + var(--safe-gap)); }
+  html[data-env="dev"]::before { top: calc(var(--safe-top) + var(--safe-gap)); }
+}
+
+/* the clip player on a phone's full screen: the picture is the whole screen and the controls lie on top of it, hidden until a touch */
+.clip-segment-player[data-pseudo-fullscreen="true"] { display: block; padding: 0; }
+.clip-segment-player[data-pseudo-fullscreen="true"] .clip-segment-frame { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; overflow: hidden; background: #000; }
+.clip-segment-player[data-pseudo-fullscreen="true"] .clip-segment-picture { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; margin: 0; }
+.clip-segment-player[data-pseudo-fullscreen="true"] .clip-segment-controls-overlay { position: absolute; inset-inline: 0; bottom: 0; padding: 0 max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); pointer-events: none; }
+.clip-segment-player[data-pseudo-fullscreen="true"] .clip-segment-controls { opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; }
+.clip-segment-player[data-pseudo-fullscreen="true"][data-controls-visible="true"] .clip-segment-controls { opacity: 1; transform: none; pointer-events: auto; }

@@ -240,16 +240,40 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
       if (dist < 105 + st.caught * 15) flee(event.clientX, event.clientY);
     };
 
+    // a finger that chased the onion must not press whatever it ran away over (a link or a button below it)
+    let guardUntil = 0;
+
     const onDown = (event: PointerEvent) => {
-      if (event.pointerType === "touch") onMove(event);
+      if (event.pointerType !== "touch") return;
+
+      const wrap = wrapRef.current;
+      const st = state.current;
+
+      if (wrap && !st.tired && !st.celebrating) {
+        const box = wrap.getBoundingClientRect();
+        const dist = Math.hypot(event.clientX - (box.left + box.width / 2), event.clientY - (box.top + box.height / 2));
+
+        if (dist < 140 + st.caught * 15) guardUntil = performance.now() + 900;
+      }
+
+      onMove(event);
+    };
+
+    const onClick = (event: MouseEvent) => {
+      if (performance.now() > guardUntil || wrapRef.current?.contains(event.target as Node)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
     };
 
     document.addEventListener("pointermove", onMove);
     document.addEventListener("pointerdown", onDown);
+    document.addEventListener("click", onClick, true);
 
     return () => {
       document.removeEventListener("pointermove", onMove);
       document.removeEventListener("pointerdown", onDown);
+      document.removeEventListener("click", onClick, true);
     };
   }, [flee]);
 
