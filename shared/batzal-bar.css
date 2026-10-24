@@ -121,3 +121,8 @@ a.bz-app { text-decoration:none; }
 a.bz-app:hover { color:var(--bz-text,inherit); }
 
 .bz-bar:has([aria-expanded="true"]) .bz-rank-tip { display:none !important; }
+
+/* on a phone the apps menu and the account window open centred under the header, never cut off at the side of the screen */
+@media (max-width: 560px) {
+  .bz-menu, .bz-pop { position: fixed; top: calc(var(--safe-top, 0px) + var(--safe-gap, 0px) + 54px); inset-inline: 12px; width: auto; max-width: 340px; margin-inline: auto; }
+}

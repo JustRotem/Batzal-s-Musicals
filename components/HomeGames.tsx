@@ -194,8 +194,9 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
     st.tired = false;
     setTired(false);
     setCaught(st.caught);
-    say(pick(CAUGHT_LINES));
-    throwConfetti(Math.min(45, 25 + st.caught * 4));
+    // every catch says how many times it was caught; confetti is only for the first catch and every fifth one
+    say([`תפסתם אותי ${st.caught} ${st.caught === 1 ? "פעם" : "פעמים"}!`, `You caught me ${st.caught} time${st.caught === 1 ? "" : "s"}!`]);
+    if (st.caught === 1 || st.caught % 5 === 0) throwConfetti(Math.min(45, 25 + st.caught * 4));
     setBouncing(false);
     window.requestAnimationFrame(() => setBouncing(true));
     // and off it goes again, a little braver
@@ -204,7 +205,7 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
         const area = roam();
 
         if (area) moveTo(area.minX + Math.random() * (area.maxX - area.minX), area.minY + Math.random() * (area.maxY - area.minY));
-        say([`נתפסתי ${st.caught} פעמים. עוד פעם?`, `Caught ${st.caught} time${st.caught === 1 ? "" : "s"}. Again?`]);
+        say(pick(CAUGHT_LINES));
         st.celebrating = false;
       }, 1500),
     );
@@ -771,7 +772,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
 
         g.obstacles.push(
           bird
-            ? { x: L.w + 20, kind: "bird", w: 52, h: 64, y: L.ground - 88 - (L.w < 700 ? 26 : 0) }
+            ? { x: L.w + 20, kind: "bird", w: 52, h: 64, y: L.ground - 88 }
             : { x: L.w + 20, kind: "rock", w: 34, h: 34, y: L.ground - 34 },
         );
         g.next = 260 + Math.random() * 300 + g.speed * 14;

@@ -7340,3 +7340,8 @@ html[data-env="dev"]::before { top: var(--safe-top); }
 .clip-segment-player[data-pseudo-fullscreen="true"] .clip-segment-controls-overlay { position: absolute; inset-inline: 0; bottom: 0; padding: 0 max(10px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); pointer-events: none; }
 .clip-segment-player[data-pseudo-fullscreen="true"] .clip-segment-controls { opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; }
 .clip-segment-player[data-pseudo-fullscreen="true"][data-controls-visible="true"] .clip-segment-controls { opacity: 1; transform: none; pointer-events: auto; }
+
+/* on a phone the apps menu and the account window open centred under the header, never cut off at the side of the screen */
+@media (max-width: 560px) {
+  .bz-menu, .bz-pop { position: fixed; top: calc(var(--safe-top, 0px) + var(--safe-gap, 0px) + 54px); inset-inline: 12px; width: auto; max-width: 340px; margin-inline: auto; }
+}

@@ -3,6 +3,8 @@ const nextConfig = {
   // Lets two dev servers (musicals + account) run from one folder without sharing a build directory.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   devIndicators: false,
+  // the DEV sites are opened through their own host names
+  allowedDevOrigins: ["*.batzal.net", "batzal.net"],
   experimental: {
     middlewareClientMaxBodySize: "1536mb",
   },

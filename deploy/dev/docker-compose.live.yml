@@ -6,7 +6,9 @@ x-live: &live
   # next dev grows without limit on a 12 GB machine shared with production: each site is capped and restarts by itself if it is ever over
   mem_limit: 1300m
   restart: unless-stopped
-  command: sh -c "npx prisma migrate deploy && npx prisma generate && npx next dev -H 0.0.0.0 -p 3000"
+  # the five sites start together and share node_modules: when two generate the client at once one fails, so it waits and tries again
+  # instead of stopping (a stopped site restarts and the sign-in waits for it)
+  command: sh -c "npx prisma migrate deploy; npx prisma generate || (sleep 12; npx prisma generate) || true; exec npx next dev -H 0.0.0.0 -p 3000"
   volumes:
     - ./src:/app
     - dev_node_modules:/app/node_modules
