@@ -826,7 +826,7 @@ export default function ClipPreviewTimingEditor({
               marginTop: 12,
               height: 10,
               borderRadius: 999,
-              background: "rgba(148, 163, 184, 0.25)",
+              background: "rgba(163,158,150, 0.25)",
               position: "relative",
               cursor: canScrub ? "pointer" : "default",
             }}

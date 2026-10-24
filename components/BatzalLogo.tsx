@@ -3,8 +3,8 @@ export default function BatzalLogo() {
     <svg viewBox="0 0 64 64" aria-hidden="true">
       <defs>
         <linearGradient id="bzg" x1="12" y1="8" x2="52" y2="60" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#9b82ff" />
-          <stop offset="1" stopColor="#5636e8" />
+          <stop offset="0" stopColor="#7b97ff" />
+          <stop offset="1" stopColor="#3a58d6" />
         </linearGradient>
       </defs>
       <path

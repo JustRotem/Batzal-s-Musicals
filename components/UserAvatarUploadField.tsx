@@ -621,7 +621,7 @@ export default function UserAvatarUploadField({
                           marginTop: 8,
                           height: 6,
                           borderRadius: 999,
-                          background: "rgba(148, 163, 184, 0.3)",
+                          background: "rgba(163,158,150, 0.3)",
                           overflow: "hidden",
                         }}
                       >

@@ -9,16 +9,25 @@ const ACCOUNT_SITE_PATHS = [
   /^\/auth\/google\/(start|callback)$/,
   /^\/auth\/sso$/,
   /^\/profile$/,
-  /^\/api\/(health|sso\/public-key|preferences|logout|notifications|service\/people|profile\/avatar)$/,
+  /^\/api\/(health|sso\/public-key|preferences|scores|logout|notifications|profile\/avatar)$/,
   /^\/uploads\/avatars\/[^/]+$/,
 ];
 
 // Account pages that must not exist on the musicals site.
+// The home page serves one page and signs people in through the account site, like the library does.
+const HOME_SITE_PATHS = [/^\/$/, /^\/auth\/account\/(start|callback)$/, /^\/auth\/(login|blocked|forbidden|pending)$/, /^\/api\/health$/];
+
+// The QR maker: one page, the sign-in routes and its history.
+const QR_SITE_PATHS = [...HOME_SITE_PATHS, /^\/api\/qr\/history(\/[^/]+)?$/];
+
+// The control panel: one page, the sign-in routes and its own API.
+const ADMIN_SITE_PATHS = [...HOME_SITE_PATHS, /^\/api\/admin(\/.*)?$/];
+
 const MOVED_TO_ACCOUNT_SITE = [/^\/profile$/];
 
 // Users and permissions moved to the control panel (admin.batzal.net).
 const MOVED_TO_CONTROL_PANEL = [/^\/admin$/, /^\/admin\/permissions(\/.*)?$/];
-const ACCOUNT_SITE_ONLY = [/^\/auth\/google\/(start|callback)$/, /^\/auth\/sso$/, /^\/api\/sso\/public-key$/, /^\/api\/preferences$/, /^\/api\/notifications$/, /^\/api\/service\/people$/];
+const ACCOUNT_SITE_ONLY = [/^\/auth\/google\/(start|callback)$/, /^\/auth\/sso$/, /^\/api\/sso\/public-key$/, /^\/api\/preferences$/, /^\/api\/scores$/, /^\/api\/notifications$/];
 
 const matches = (patterns: RegExp[], pathname: string) => patterns.some((pattern) => pattern.test(pathname));
 
@@ -34,7 +43,19 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(getAdminUrl());
   }
 
-  if (mode === "account") {
+  if (mode === "admin") {
+    if (!matches(ADMIN_SITE_PATHS, pathname)) {
+      return notFound(request);
+    }
+  } else if (mode === "qr") {
+    if (!matches(QR_SITE_PATHS, pathname)) {
+      return notFound(request);
+    }
+  } else if (mode === "home") {
+    if (!matches(HOME_SITE_PATHS, pathname)) {
+      return notFound(request);
+    }
+  } else if (mode === "account") {
     if (pathname === "/") {
       return NextResponse.redirect(new URL("/profile", request.url));
     }

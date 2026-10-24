@@ -1,0 +1,117 @@
+# The DEV copy of the Batzal network. It lives on the server in ~/dev, next to (and fully apart from) production:
+# its own database (a copy of production, see setup-server.sh), its own uploads, its own sign-in keys, no e-mails.
+# Image: built from the `dev` branch (tag `dev`); `main` builds the production image (tag `latest`).
+name: batzal-dev
+
+x-site: &site
+  image: ghcr.io/justrotem/batzals-musicals:dev
+  restart: unless-stopped
+  pull_policy: always
+  depends_on:
+    postgres:
+      condition: service_healthy
+  env_file: .env
+  environment: &site-env
+    DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@postgres:5432/musicals?schema=public
+    PORT: 3000
+    ACCOUNT_URL: https://account-dev.batzal.net
+    MUSICALS_URL: https://library-dev.batzal.net
+    HOME_URL: https://dev.batzal.net
+    QR_URL: https://qr-dev.batzal.net
+    ADMIN_URL: https://admin-dev.batzal.net
+    BATZAL_STATIC_URL: https://static-dev.batzal.net
+    SSO_ALLOWED_ORIGINS: https://library-dev.batzal.net,https://dev.batzal.net,https://qr-dev.batzal.net,https://admin-dev.batzal.net
+    # no real e-mails are ever sent from here (the database holds real addresses)
+    RESEND_API_KEY: ""
+    NEXT_PUBLIC_APP_TITLE_HE: "ספריית הבצל (DEV)"
+    NEXT_PUBLIC_APP_TITLE_EN: "Onion Library (DEV)"
+  healthcheck:
+    test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((res)=>process.exit(res.ok?0:1)).catch(()=>process.exit(1))"]
+    interval: 15s
+    timeout: 5s
+    retries: 10
+    start_period: 40s
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: dev-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: musicals
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - dev_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d musicals"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  library:
+    <<: *site
+    container_name: dev-library
+    environment:
+      <<: *site-env
+      APP_URL: https://library-dev.batzal.net
+      NEXT_PUBLIC_APP_URL: https://library-dev.batzal.net
+      CLIP_UPLOAD_BASE_URL: https://library-dev.batzal.net
+    ports:
+      - "127.0.0.1:3100:3000"
+    volumes:
+      - /var/www/musicals-dev/public/uploads:/app/public/uploads
+
+  account:
+    <<: *site
+    container_name: dev-account
+    environment:
+      <<: *site-env
+      APP_URL: https://account-dev.batzal.net
+      NEXT_PUBLIC_APP_URL: https://account-dev.batzal.net
+      APP_MODE: account
+    ports:
+      - "127.0.0.1:3101:3000"
+    volumes:
+      - /var/www/musicals-dev/public/uploads:/app/public/uploads
+
+  home:
+    <<: *site
+    container_name: dev-home
+    environment:
+      <<: *site-env
+      APP_URL: https://dev.batzal.net
+      NEXT_PUBLIC_APP_URL: https://dev.batzal.net
+      APP_MODE: home
+    ports:
+      - "127.0.0.1:3102:3000"
+
+  qr:
+    <<: *site
+    container_name: dev-qr
+    environment:
+      <<: *site-env
+      APP_URL: https://qr-dev.batzal.net
+      NEXT_PUBLIC_APP_URL: https://qr-dev.batzal.net
+      APP_MODE: qr
+    ports:
+      - "127.0.0.1:3103:3000"
+
+  # The DEV panel manages people and permissions of the DEV database. It has no host agent: the server controls are off here,
+  # so nothing in DEV can touch production containers.
+  admin:
+    <<: *site
+    container_name: dev-admin
+    environment:
+      <<: *site-env
+      APP_URL: https://admin-dev.batzal.net
+      NEXT_PUBLIC_APP_URL: https://admin-dev.batzal.net
+      APP_MODE: admin
+      ADMIN_AGENT_URL: ""
+      ADMIN_AGENT_TOKEN: ""
+    ports:
+      - "127.0.0.1:3104:3000"
+
+volumes:
+  dev_pgdata:

@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { getAllowedOrigins } from "@/lib/sso";
 import { THEME_COOKIE_NAME } from "@/lib/theme";
 import { getAppUrl } from "@/lib/env";
+import { getEffectivePermissions } from "@/lib/permissions";
 import { LANGUAGE_COOKIE_NAME, normalizeLanguage } from "@/lib/i18n";
 
 export const dynamic = "force-dynamic";
@@ -56,7 +57,21 @@ export async function GET(request: Request) {
 
   if (!user) return reply(request, { error: "unauthorized" }, 401);
 
-  return reply(request, { language: user.language, theme: user.theme });
+  const picture = user.avatarUrl ? new URL(user.avatarUrl, getAppUrl()).toString() : null;
+
+  return reply(request, {
+    language: user.language,
+    theme: user.theme,
+    user: {
+      name: user.username,
+      email: user.email,
+      picture,
+      role: user.role,
+      lang: user.language,
+      theme: user.theme,
+      perms: await getEffectivePermissions(user),
+    },
+  });
 }
 
 export async function POST(request: Request) {

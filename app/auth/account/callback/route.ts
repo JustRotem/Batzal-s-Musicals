@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ACCOUNT_SSO_STATE_COOKIE, acceptAccountToken } from "@/lib/account-sso";
-import { createSession } from "@/lib/auth";
+import { createSession, markIdentityConfirmed } from "@/lib/auth";
+import { isAdminMode } from "@/lib/app-mode";
 import { db } from "@/lib/db";
 import { getAppUrl } from "@/lib/env";
 import { LOGIN_NEXT_COOKIE, sanitizeNextPath } from "@/lib/login-next";
@@ -49,6 +50,13 @@ export async function GET(request: NextRequest) {
 
   // Join the browser's sign-in group, so signing out on any Batzal site ends this session too.
   await createSession(user.id, user.language, claims.sid || null);
+
+  // The control panel asked for a fresh Google sign-in (see /auth/confirm on the account site): remember it for a few minutes
+  if (claims.confirmed === true && isAdminMode()) {
+    await markIdentityConfirmed(10);
+
+    return finish("/?confirmed=1");
+  }
 
   return finish(next ?? "/");
 }

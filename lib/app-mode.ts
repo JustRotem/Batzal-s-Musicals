@@ -1,9 +1,23 @@
-// One codebase, two sites: the musicals site and the dedicated account site (sign-in, settings, users and permissions).
-// Each container runs with APP_MODE=musicals (default) or APP_MODE=account.
-export type AppMode = "musicals" | "account";
+// One codebase, several sites: the musicals site (the library), the account site (sign-in, settings, users and
+// permissions) and the Batzal home page. Each container runs with APP_MODE=musicals (default), account or home.
+export type AppMode = "musicals" | "account" | "home" | "qr" | "admin";
 
 export function getAppMode(): AppMode {
-  return process.env.APP_MODE?.trim() === "account" ? "account" : "musicals";
+  const mode = process.env.APP_MODE?.trim();
+
+  return mode === "account" || mode === "home" || mode === "qr" || mode === "admin" ? mode : "musicals";
+}
+
+export function isAdminMode() {
+  return getAppMode() === "admin";
+}
+
+export function isQrMode() {
+  return getAppMode() === "qr";
+}
+
+export function isHomeMode() {
+  return getAppMode() === "home";
 }
 
 export function isAccountMode() {
@@ -33,4 +47,14 @@ export function getAdminUrl() {
 // Where the musicals site lives.
 export function getMusicalsUrl() {
   return readUrl("MUSICALS_URL", "https://library.batzal.net", "http://localhost:3000");
+}
+
+// The Batzal home page (what the logo leads to on every site).
+export function getHomeUrl() {
+  return readUrl("HOME_URL", "https://batzal.net", "http://localhost:4020");
+}
+
+// Where the QR maker lives.
+export function getQrUrl() {
+  return readUrl("QR_URL", "https://qr.batzal.net", "http://localhost:4030");
 }

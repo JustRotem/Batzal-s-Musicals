@@ -1,4 +1,4 @@
-import { getMusicalsUrl } from "@/lib/app-mode";
+import { getAdminUrl, getHomeUrl, getMusicalsUrl, getQrUrl } from "@/lib/app-mode";
 import { createPrivateKey, createPublicKey, randomBytes, sign, verify } from "crypto";
 
 // Single sign-on: the account site is the identity provider for every Batzal site (the musicals site included).
@@ -15,6 +15,7 @@ const DEFAULT_ALLOWED_ORIGINS = [
   "https://musicals.batzal.net",
   "https://qr.batzal.net",
   "https://admin.batzal.net",
+  "https://batzal.net",
 ];
 const STATE_PATTERN = /^[A-Za-z0-9_-]{16,128}$/;
 const TOKEN_VERSION = "v1";
@@ -35,6 +36,8 @@ export type SsoClaims = {
   perms: string[];
   // The browser's sign-in group: sessions that share it end together
   sid: string;
+  // Set only when the person just signed in with Google again to confirm it is really them
+  confirmed?: boolean;
   state: string;
   jti: string;
   iat: number;
@@ -212,7 +215,10 @@ export function verifySsoToken(
 const MUSICALS_CALLBACK_PATH = "/auth/account/callback";
 
 export function getCallbackPath(origin: string) {
-  return origin === new URL(getMusicalsUrl()).origin ? MUSICALS_CALLBACK_PATH : SSO_CALLBACK_PATH;
+  // the library, the home page, the QR maker and the control panel are full Next.js sites with their own callback route
+  const nextSites = [getMusicalsUrl(), getHomeUrl(), getQrUrl(), getAdminUrl()].map((url) => new URL(url).origin);
+
+  return nextSites.includes(origin) ? MUSICALS_CALLBACK_PATH : SSO_CALLBACK_PATH;
 }
 
 export function buildSsoCallbackUrl(origin: string, token: string) {

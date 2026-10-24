@@ -25,12 +25,19 @@ export default function AppsMenu({ language, showPanel }: { language: AppLanguag
       if (event.key === "Escape") setOpen(false);
     };
 
+    const onOther = (event: Event) => {
+      if ((event as CustomEvent).detail !== wrapRef.current) setOpen(false);
+    };
+
     document.addEventListener("click", onClick);
     document.addEventListener("keydown", onKey);
+    document.addEventListener("bz-popup", onOther);
+    document.dispatchEvent(new CustomEvent("bz-popup", { detail: wrapRef.current }));
 
     return () => {
       document.removeEventListener("click", onClick);
       document.removeEventListener("keydown", onKey);
+      document.removeEventListener("bz-popup", onOther);
     };
   }, [open]);
 

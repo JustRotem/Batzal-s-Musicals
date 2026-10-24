@@ -5,7 +5,6 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { logoutAction } from "@/app/auth/logout/actions";
 import { setPreferredLanguageAction, setPreferredThemeAction } from "@/app/actions";
 import { getRankInfo, RANK_LEVELS } from "@/lib/ranks";
-import RequestEditorAccessModal from "@/components/RequestEditorAccessModal";
 import type { AppLanguage } from "@/lib/i18n";
 
 // The sign-in button, rank chip, avatar button and menu of the shared Batzal bar. It renders the same markup as the
@@ -25,8 +24,6 @@ type BatzalAccountMenuProps = {
   signInHref: string;
   // Entries that exist only on this site (shown after the shared ones).
   extras?: Array<{ href: string; label: string; badge?: number }>;
-  // Whether the menu offers asking for editing access (a floating window)
-  editorRequest?: "available" | "pending" | null;
 };
 
 const TEXT = {
@@ -43,8 +40,6 @@ const TEXT = {
     confirmText: "תתנתק מהאתר הזה. אפשר להתחבר שוב בכל רגע.",
     cancel: "ביטול",
     level: "דרגה",
-    editorRequest: "בקשת גישת עריכה",
-    editorRequestPending: "בקשת עריכה ממתינה לאישור",
     notifications: "התראות",
     markAll: "סמן הכל כנקרא",
     noNotifications: "אין התראות חדשות",
@@ -62,8 +57,6 @@ const TEXT = {
     confirmText: "You will be signed out of this site. You can sign in again at any time.",
     cancel: "Cancel",
     level: "Rank",
-    editorRequest: "Request editing access",
-    editorRequestPending: "Editing request awaiting approval",
     notifications: "Notifications",
     markAll: "Mark all as read",
     noNotifications: "No new notifications",
@@ -81,12 +74,20 @@ function useDismiss(open: boolean, close: () => void, ref: React.RefObject<HTMLE
       if (event.key === "Escape") close();
     };
 
+    // Only one header window is open at a time: opening another one closes this one
+    const onOther = (event: Event) => {
+      if ((event as CustomEvent).detail !== ref.current) close();
+    };
+
     document.addEventListener("click", onClick);
     document.addEventListener("keydown", onKey);
+    document.addEventListener("bz-popup", onOther);
+    document.dispatchEvent(new CustomEvent("bz-popup", { detail: ref.current }));
 
     return () => {
       document.removeEventListener("click", onClick);
       document.removeEventListener("keydown", onKey);
+      document.removeEventListener("bz-popup", onOther);
     };
   }, [open, close, ref]);
 }
@@ -314,14 +315,11 @@ export default function BatzalAccountMenu({
   accountUrl,
   signInHref,
   extras = [],
-  editorRequest = null,
 }: BatzalAccountMenuProps) {
   const t = TEXT[language];
   const [open, setOpen] = useState(false);
   const [popOpen, setPopOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const [requestOpen, setRequestOpen] = useState(false);
-  const [requestSent, setRequestSent] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const signInRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
@@ -420,7 +418,7 @@ export default function BatzalAccountMenu({
 
   const rank = getRankInfo(user.role, language);
   const avatarSrc = user.avatarUrl
-    ? `${user.avatarUrl}${user.avatarUrl.startsWith("/") ? `?v=${encodeURIComponent(user.avatarVersion)}` : ""}`
+    ? `${user.avatarUrl}${user.avatarUrl.startsWith("/") || user.avatarUrl.includes("/uploads/avatars/") ? `?v=${encodeURIComponent(user.avatarVersion)}` : ""}`
     : null;
 
   return (
@@ -477,20 +475,6 @@ export default function BatzalAccountMenu({
             {t.account}
           </a>
 
-          {editorRequest ? (
-            <button
-              type="button"
-              role="menuitem"
-              disabled={editorRequest === "pending" || requestSent}
-              onClick={() => {
-                setOpen(false);
-                setRequestOpen(true);
-              }}
-            >
-              {editorRequest === "pending" || requestSent ? t.editorRequestPending : t.editorRequest}
-            </button>
-          ) : null}
-
           <PreferenceRows t={t} language={language} theme={theme} redirectTo={redirectTo} />
 
           {extras.map((item) => (
@@ -511,14 +495,6 @@ export default function BatzalAccountMenu({
             {t.signOut}
           </button>
         </div>
-      ) : null}
-
-      {requestOpen ? (
-        <RequestEditorAccessModal
-          language={language}
-          onClose={() => setRequestOpen(false)}
-          onSent={() => setRequestSent(true)}
-        />
       ) : null}
 
       {confirming ? (

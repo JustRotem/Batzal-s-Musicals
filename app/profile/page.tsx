@@ -3,7 +3,7 @@ import {
   updateUsernameAction,
 } from "@/app/profile/actions";
 import { setPreferredLanguageAction, setPreferredThemeAction } from "@/app/actions";
-import FormSubmitButton from "@/components/FormSubmitButton";
+import UsernameEditor from "@/components/UsernameEditor";
 import UserAvatarUploadField from "@/components/UserAvatarUploadField";
 import { getCurrentLanguage } from "@/lib/i18n-server";
 import { getCurrentTheme } from "@/lib/theme-server";
@@ -66,6 +66,8 @@ const COPY = {
     username: "שם משתמש",
     save: "שמור",
     saving: "שומר...",
+    edit: "עריכה",
+    cancel: "ביטול",
     email: "אימייל",
     emailHint: "האימייל מגיע מחשבון Google ולא ניתן לשינוי.",
     language: "שפה",
@@ -88,6 +90,8 @@ const COPY = {
     username: "Username",
     save: "Save",
     saving: "Saving...",
+    edit: "Edit",
+    cancel: "Cancel",
     email: "Email",
     emailHint: "The email comes from your Google account and cannot be changed.",
     language: "Language",
@@ -144,31 +148,11 @@ export default async function ProfilePage(props: ProfilePageProps) {
 
               <div className="profile-info-grid">
                 <div className="profile-info-card">
-                  <form action={updateUsernameAction} className="profile-username-form">
-                    <label className="profile-info-label" htmlFor="profile-username">
-                      {copy.username}
-                    </label>
-                    <div className="profile-username-row">
-                      <input
-                        id="profile-username"
-                        className="input"
-                        name="displayHandle"
-                        defaultValue={user.username}
-                        minLength={3}
-                        maxLength={30}
-                        autoComplete="off"
-                        autoCapitalize="off"
-                        autoCorrect="off"
-                        spellCheck={false}
-                        data-lpignore="true"
-                        data-1p-ignore="true"
-                        data-bwignore="true"
-                        data-form-type="other"
-                        required
-                      />
-                      <FormSubmitButton idleLabel={copy.save} pendingLabel={copy.saving} />
-                    </div>
-                  </form>
+                  <UsernameEditor
+                    action={updateUsernameAction}
+                    username={user.username}
+                    labels={{ title: copy.username, edit: copy.edit, save: copy.save, saving: copy.saving, cancel: copy.cancel }}
+                  />
                 </div>
 
                 <div className="profile-info-card profile-info-card-email">

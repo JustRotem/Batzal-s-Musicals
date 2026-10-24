@@ -6,8 +6,8 @@ export const RANK_LEVELS = 4;
 const RANKS = {
   user: {
     level: 1,
-    he: ["משתמש", "חשבון רגיל. אפשר לצפות בכל התכנים, להגיב ולנהל את הפרופיל. כדי לערוך תכנים אפשר לבקש גישת עורך."],
-    en: ["Member", "A regular account. You can browse everything, comment and manage your profile. Ask for editor access to edit content."],
+    he: ["משתמש", "חשבון רגיל. אפשר לצפות בכל התכנים, להגיב ולנהל את הפרופיל. עריכת תכנים ניתנת על ידי מנהלים."],
+    en: ["Member", "A regular account. You can browse everything, comment and manage your profile. Editing is granted by the admins."],
   },
   editor: {
     level: 2,

@@ -1,16 +1,13 @@
 "use server";
 
-import { notifyAdmins } from "@/lib/notifications";
-import { getAdminUrl } from "@/lib/app-mode";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getCurrentUser, requirePermission, requireUser } from "@/lib/auth";
+import { requirePermission, requireUser } from "@/lib/auth";
 import { ImageUploadError, isFileEntry } from "@/lib/image-upload";
 import { updateUserAvatar } from "@/lib/profile-avatar";
 import { PERMISSIONS } from "@/lib/permissions";
 import { validateUsername } from "@/lib/username";
-import { notifyAdminsAboutEditorRequest } from "@/lib/editor-request-notifications";
 
 type ProfileSection = "profile" | "permissions" | "security";
 
@@ -58,53 +55,6 @@ function redirectProfileWithError(error: string, section: ProfileSection): never
 
 function redirectProfileWithSuccess(success: string, section: ProfileSection): never {
   redirect(buildProfileRedirectUrl({ section, success }));
-}
-
-// Asking for editing access happens from a window in the header, on any Batzal page of this site.
-export async function submitEditorRequestAction(
-  message: string,
-): Promise<{ status: "sent" | "pending" | "unavailable" }> {
-  const user = await getCurrentUser();
-
-  if (!user || user.role !== "user" || user.status === "blocked") {
-    return { status: "unavailable" };
-  }
-
-  if (user.status === "pending") {
-    return { status: "pending" };
-  }
-
-  const requestMessage = message.trim().slice(0, 1000);
-
-  await db.user.update({
-    where: { id: user.id },
-    data: {
-      status: "pending",
-      requestMessage: requestMessage || null,
-    },
-  });
-
-  await notifyAdmins({
-    kind: "editor-request",
-    titleHe: "בקשת גישת עריכה חדשה",
-    titleEn: "New editing access request",
-    bodyHe: `${user.username} מבקש גישת עריכה.`,
-    bodyEn: `${user.username} asked for editing access.`,
-    href: `${getAdminUrl()}`,
-  });
-
-  await notifyAdminsAboutEditorRequest({
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    username: user.username,
-    email: user.email,
-    requestMessage: requestMessage || null,
-  });
-
-  revalidatePath("/", "layout");
-
-  return { status: "sent" };
 }
 
 export async function updateAvatarAction(formData: FormData) {

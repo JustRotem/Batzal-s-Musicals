@@ -92,7 +92,7 @@ export function createGoogleOAuthState() {
   return randomBytes(24).toString("hex");
 }
 
-export function buildGoogleAuthorizationUrl(state: string) {
+export function buildGoogleAuthorizationUrl(state: string, reauthEmail?: string) {
   if (!isGoogleAuthEnabled()) {
     throw new GoogleAuthError(
       "google-unavailable",
@@ -107,10 +107,14 @@ export function buildGoogleAuthorizationUrl(state: string) {
     scope: "openid email profile",
     access_type: "online",
     include_granted_scopes: "true",
-    // always ask which Google account to use
-    prompt: "select_account",
+    // always ask which Google account to use; confirming an identity forces a fresh Google sign-in for that account
+    prompt: reauthEmail ? "login" : "select_account",
     state,
   });
+
+  if (reauthEmail) {
+    params.set("login_hint", reauthEmail);
+  }
 
   return `${GOOGLE_AUTH_BASE_URL}?${params.toString()}`;
 }
@@ -357,4 +361,41 @@ export async function completeGoogleSignIn({
 
 export function getGoogleErrorRedirectUrl(errorCode: GoogleAuthError["code"]) {
   return `/auth/login?error=${errorCode}`;
+}
+
+// Proves who is at the keyboard right now without touching any Batzal session: the Google answer is checked
+// (state, code, verified email) and returned. Used to confirm identity before sensitive changes.
+export async function verifyGoogleIdentity({
+  code,
+  expectedState,
+  receivedState,
+}: {
+  code: string | null;
+  expectedState: string | null;
+  receivedState: string | null;
+}) {
+  if (!isGoogleAuthEnabled()) {
+    throw new GoogleAuthError("google-unavailable", "Google OAuth is not fully configured");
+  }
+
+  if (!expectedState || !receivedState || expectedState !== receivedState) {
+    throw new GoogleAuthError("google-state-invalid", "Google OAuth state validation failed");
+  }
+
+  if (!code) {
+    throw new GoogleAuthError("google-code-missing", "Missing Google authorization code");
+  }
+
+  const profile = await fetchGoogleUserInfo(await exchangeGoogleCode(code));
+  const email = profile.email?.trim().toLowerCase();
+
+  if (!email) {
+    throw new GoogleAuthError("google-email-missing", "Google account did not provide an email");
+  }
+
+  if (!profile.email_verified) {
+    throw new GoogleAuthError("google-email-unverified", "Google account email is not verified");
+  }
+
+  return { sub: profile.sub, email };
 }

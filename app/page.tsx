@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import HomeLanding from "@/components/HomeLanding";
+import AdminGate from "@/components/AdminGate";
+import QrMaker from "@/components/QrMaker";
+import { isAdminMode, isHomeMode, isQrMode } from "@/lib/app-mode";
 import { getAppTitle } from "@/lib/app-config";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
@@ -13,6 +17,25 @@ import { getMusicalDescriptionText } from "@/lib/musical-description";
 
 export async function generateMetadata(): Promise<Metadata> {
   const language = await getCurrentLanguage();
+
+  if (isAdminMode()) {
+    return { title: language === "he" ? "לוח בקרה" : "Control panel", robots: { index: false, follow: false } };
+  }
+
+  if (isQrMode()) {
+    return {
+      title: language === "he" ? "מפיק QR" : "QR maker",
+      description: language === "he" ? "יוצרים קודי QR עם לוגו, מעתיקים או מורידים." : "Make QR codes with a logo, then copy or download them.",
+    };
+  }
+
+  if (isHomeMode()) {
+    return {
+      title: "Batzal",
+      description: language === "he" ? "Batzal: ספרייה, כלים ובלוג." : "Batzal: a library, tools and a blog.",
+    };
+  }
+
   const appTitle = getAppTitle(language);
 
   return {
@@ -26,6 +49,19 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   const language = await getCurrentLanguage();
+
+  if (isAdminMode()) {
+    return <AdminGate language={language} />;
+  }
+
+  if (isQrMode()) {
+    return <QrMaker language={language} signedIn={Boolean(await getCurrentUser())} />;
+  }
+
+  if (isHomeMode()) {
+    return <HomeLanding language={language} />;
+  }
+
   const t = getTranslations(language);
   const currentUser = await getCurrentUser();
   const canSeeUnpublished = currentUser ? await canManageMusicalContent(currentUser) : false;

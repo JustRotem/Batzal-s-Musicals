@@ -47,6 +47,8 @@ model User {
   moderatedComments Comment[] @relation("CommentModeratedBy")
   commentReactions  CommentReaction[]
   notifications     Notification[]
+  gameScores        GameScore[]
+  qrHistory         QrHistory[]
   submittedCommentReports CommentReport[] @relation("CommentReportReporter")
   reviewedCommentReports  CommentReport[] @relation("CommentReportReviewedBy")
 }
@@ -126,6 +128,9 @@ model Session {
   // One browser signed in to several Batzal sites: the account session and the sessions it created elsewhere share this id,
   // so signing out anywhere signs out everywhere.
   ssoGroup     String?
+
+  // Set when the person signed in with Google again to confirm it is really them (sensitive changes in the control panel)
+  confirmedUntil DateTime?
 
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -345,5 +350,33 @@ model Notification {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, readAt])
+  @@index([userId, createdAt])
+}
+
+// Best result of a person in one of the small games on the Batzal home page.
+model GameScore {
+  id        String   @id @default(cuid())
+  game      String
+  score     Int
+  updatedAt DateTime @default(now()) @updatedAt
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, game])
+  @@index([game, score])
+}
+
+// A QR code someone made on qr.batzal.net: the link, the centre image (a small data URL) and its size.
+model QrHistory {
+  id        String   @id @default(cuid())
+  url       String
+  logoSize  Int      @default(30)
+  logo      String?
+  createdAt DateTime @default(now())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId, createdAt])
 }

@@ -80,7 +80,6 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       SSO_PRIVATE_KEY: ${SSO_PRIVATE_KEY:-}
-      ADMIN_SERVICE_TOKEN: ${ADMIN_SERVICE_TOKEN:-}
       SSO_ALLOWED_ORIGINS: ${SSO_ALLOWED_ORIGINS:-}
       PORT: 3000
       APP_MODE: account
@@ -100,6 +99,84 @@ services:
       timeout: 5s
       retries: 10
       start_period: 40s
+
+  # The Batzal home page, the QR maker and the control panel are the same image in other modes. They sign people in
+  # through the account site like the library does, and share its database.
+  home:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: batzals-home-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment: &site-env
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/musicals?schema=public}
+      APP_URL: ${HOME_APP_URL:-http://localhost:4020}
+      NEXT_PUBLIC_APP_URL: ${HOME_APP_URL:-http://localhost:4020}
+      ACCOUNT_URL: ${ACCOUNT_URL:-http://localhost:3001}
+      MUSICALS_URL: ${MUSICALS_URL:-http://localhost:3000}
+      SSO_PUBLIC_KEY: ${SSO_PUBLIC_KEY:-}
+      SSO_ALLOWED_ORIGINS: ${SSO_ALLOWED_ORIGINS:-}
+      PORT: 3000
+      APP_MODE: home
+    ports:
+      - "3002:3000"
+    healthcheck: &site-health
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/api/health').then((res)=>process.exit(res.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  qr:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: batzals-qr-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      <<: *site-env
+      APP_URL: ${QR_APP_URL:-http://localhost:4030}
+      NEXT_PUBLIC_APP_URL: ${QR_APP_URL:-http://localhost:4030}
+      APP_MODE: qr
+    ports:
+      - "3003:3000"
+    healthcheck: *site-health
+
+  # The panel itself has no power over the server: it asks the agent that runs on the host (admin-batzal/server.js,
+  # listening on the Docker bridge address) and sends it the shared secret.
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: batzals-admin-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      <<: *site-env
+      APP_URL: ${ADMIN_APP_URL:-http://localhost:4011}
+      NEXT_PUBLIC_APP_URL: ${ADMIN_APP_URL:-http://localhost:4011}
+      ADMIN_AGENT_URL: ${ADMIN_AGENT_URL:-http://host.docker.internal:3200}
+      ADMIN_AGENT_TOKEN: ${ADMIN_AGENT_TOKEN:-}
+      APP_MODE: admin
+    ports:
+      - "3004:3000"
+    healthcheck: *site-health
 
 volumes:
   postgres_data:

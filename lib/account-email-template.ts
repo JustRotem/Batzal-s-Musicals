@@ -78,7 +78,7 @@ export function renderAccountEmailTemplate(
                         <td align="right" style="padding:0;">
                           <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
                             <tr>
-                              <td style="width:52px; height:52px; border-radius:18px; background:#38bdf8; background-image:linear-gradient(135deg,#38bdf8 0%,#8b5cf6 100%); color:#ffffff; text-align:center; font-size:22px; font-weight:800; font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;">
+                              <td style="width:52px; height:52px; border-radius:18px; background:#38bdf8; background-image:linear-gradient(135deg,#38bdf8 0%,#4b70f5 100%); color:#ffffff; text-align:center; font-size:22px; font-weight:800; font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;">
                                 BM
                               </td>
                               <td style="padding-right:12px; font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;">
@@ -124,7 +124,7 @@ export function renderAccountEmailTemplate(
                               <td style="padding:10px 0 8px;">
                                 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
                                   <tr>
-                                    <td align="center" bgcolor="#2563eb" style="border-radius:999px; background:#2563eb; background-image:linear-gradient(135deg,#2563eb 0%,#7c3aed 100%);">
+                                    <td align="center" bgcolor="#2563eb" style="border-radius:999px; background:#2563eb; background-image:linear-gradient(135deg,#2563eb 0%,#3a58d6 100%);">
                                       <a href="${input.ctaUrl}" style="display:inline-block; padding:14px 24px; font-size:16px; line-height:1.2; font-weight:800; color:#ffffff; text-decoration:none; font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;">
                                         ${escapeHtml(input.ctaLabel)}
                                       </a>

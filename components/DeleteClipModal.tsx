@@ -87,7 +87,7 @@ export default function DeleteClipModal({
               style={{
                 position: "fixed",
                 inset: 0,
-                background: "rgba(2, 6, 23, 0.72)",
+                background: "rgba(24,23,22, 0.72)",
                 backdropFilter: "blur(8px)",
                 WebkitBackdropFilter: "blur(8px)",
                 display: "grid",

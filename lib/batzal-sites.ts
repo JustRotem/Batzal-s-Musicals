@@ -11,6 +11,13 @@ export type BatzalSite = {
 
 export const BATZAL_SITES: BatzalSite[] = [
   {
+    host: "batzal.net",
+    href: "https://batzal.net",
+    he: "דף הבית",
+    en: "Home",
+    icon: "M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10",
+  },
+  {
     host: "library.batzal.net",
     href: "https://library.batzal.net",
     he: "הספרייה",

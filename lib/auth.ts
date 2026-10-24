@@ -139,6 +139,30 @@ export async function createSession(userId: string, language?: string | null, ss
   }
 }
 
+// Marks this browser's session as confirmed (the person just signed in with Google again) for a few minutes.
+export async function markIdentityConfirmed(minutes: number) {
+  const cookieStore = await cookies();
+  const rawToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!rawToken) return;
+
+  await db.session.updateMany({
+    where: { tokenHash: hashSha256(rawToken) },
+    data: { confirmedUntil: new Date(Date.now() + minutes * 60_000) },
+  });
+}
+
+export async function isIdentityConfirmed() {
+  const cookieStore = await cookies();
+  const rawToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+
+  if (!rawToken) return false;
+
+  const session = await db.session.findUnique({ where: { tokenHash: hashSha256(rawToken) }, select: { confirmedUntil: true } });
+
+  return Boolean(session?.confirmedUntil && session.confirmedUntil > new Date());
+}
+
 export async function clearSession() {
   const cookieStore = await cookies();
   const rawToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
