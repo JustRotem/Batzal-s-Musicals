@@ -7360,3 +7360,9 @@ html[data-env="dev"]::before { top: var(--safe-top); }
 @media (max-width: 560px) {
   .bz-rank { width: 40px; padding: 0; justify-content: center; }
 }
+
+/* one fixed size for every header button, so nothing from another rule can make one taller than the rest */
+.site-header-actions { flex-wrap: nowrap !important; align-items: center !important; }
+.bz-apps, .bz-bell, .bz-acct-btn, .bz-rank, .bz-guest-btn { box-sizing: border-box !important; height: 40px !important; min-height: 40px !important; max-height: 40px !important; margin: 0 !important; }
+.bz-apps, .bz-bell, .bz-acct-btn { width: 40px !important; min-width: 40px !important; }
+.bz-acct-btn img, .bz-acct-btn .ini { width: 36px !important; height: 36px !important; min-width: 0 !important; max-width: none !important; }
