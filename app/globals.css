@@ -7350,3 +7350,13 @@ html[data-env="dev"]::before { top: var(--safe-top); }
 .site-header-actions, .bz-actions, .bz-acct { align-items: center; }
 .bz-appswrap, .bz-bellwrap, .bz-rankwrap, .bz-signin-wrap { display: flex; align-items: center; min-height: 40px; }
 .bz-apps, .bz-bell, .bz-guest-btn, .bz-rank, .bz-acct-btn { margin: 0; vertical-align: middle; }
+
+/* the header buttons are all the same size (40px) and close together; the apps button stays near the notifications */
+.bz-rank { height: 40px; }
+.bz-acct-btn { width: 40px; height: 40px; }
+.bz-acct-btn img, .bz-acct-btn .ini { width: 38px; height: 38px; }
+.site-header-actions, .bz-actions { gap: 2px; }
+.bz-acct { gap: 4px; }
+@media (max-width: 560px) {
+  .bz-rank { width: 40px; padding: 0; justify-content: center; }
+}
