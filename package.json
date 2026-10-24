@@ -4,6 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:library": "node scripts/dev-site.mjs library",
+    "dev:account": "node scripts/dev-site.mjs account",
+    "dev:home": "node scripts/dev-site.mjs home",
+    "dev:qr": "node scripts/dev-site.mjs qr",
+    "dev:admin": "node scripts/dev-site.mjs admin",
     "build": "next build",
     "start": "next start",
     "db:generate": "prisma generate",

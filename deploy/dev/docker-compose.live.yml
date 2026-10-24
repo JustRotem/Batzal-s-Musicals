@@ -1,0 +1,57 @@
+# LIVE mode of DEV: the sites run `next dev` on the source files in ~/dev/src, which `sync.sh` (run on the PC) updates in
+# a second or two. Every change shows on *-dev.batzal.net almost at once, with no image build to wait for.
+# Switch to it:   cd ~/dev && docker compose -f docker-compose.yml -f docker-compose.live.yml up -d
+# Back to the built image:   bash ~/dev/update.sh
+x-live: &live
+  command: sh -c "npx prisma migrate deploy && npx prisma generate && npx next dev -H 0.0.0.0 -p 3000"
+  volumes:
+    - ./src:/app
+    - dev_node_modules:/app/node_modules
+
+services:
+  library:
+    <<: *live
+    environment:
+      NODE_ENV: development
+      NEXT_DIST_DIR: .next-library
+      SHARED_COOKIE_DOMAIN: .batzal.net
+      NEXT_TELEMETRY_DISABLED: "1"
+    volumes:
+      - ./src:/app
+      - dev_node_modules:/app/node_modules
+      - /var/www/musicals-dev/public/uploads:/app/public/uploads
+  account:
+    <<: *live
+    environment:
+      NODE_ENV: development
+      NEXT_DIST_DIR: .next-account
+      SHARED_COOKIE_DOMAIN: .batzal.net
+      NEXT_TELEMETRY_DISABLED: "1"
+    volumes:
+      - ./src:/app
+      - dev_node_modules:/app/node_modules
+      - /var/www/musicals-dev/public/uploads:/app/public/uploads
+  home:
+    <<: *live
+    environment:
+      NODE_ENV: development
+      NEXT_DIST_DIR: .next-home
+      SHARED_COOKIE_DOMAIN: .batzal.net
+      NEXT_TELEMETRY_DISABLED: "1"
+  qr:
+    <<: *live
+    environment:
+      NODE_ENV: development
+      NEXT_DIST_DIR: .next-qr
+      SHARED_COOKIE_DOMAIN: .batzal.net
+      NEXT_TELEMETRY_DISABLED: "1"
+  admin:
+    <<: *live
+    environment:
+      NODE_ENV: development
+      NEXT_DIST_DIR: .next-admin
+      SHARED_COOKIE_DOMAIN: .batzal.net
+      NEXT_TELEMETRY_DISABLED: "1"
+
+volumes:
+  dev_node_modules:

@@ -13,6 +13,17 @@ A full copy of the Batzal network on the same server, for trying things before t
 
 Access is by a one-time link per browser (it is kept on the server in `~/dev/.dev-key`: `https://dev.batzal.net/__dev?key=<key>`). After opening it once, all the DEV sites work for a year without any password, and the sites link to each other inside DEV.
 
+## Live mode (changes in seconds, no image build)
+
+The DEV sites normally run on the image built from the `dev` branch (which takes minutes). In **live mode** they run `next dev` on the source files in `~/dev/src`, and every change shows on the DEV addresses about 3 seconds after it is sent:
+
+- send the files from the PC: `bash deploy/dev/sync.sh` (a second; the sites reload by themselves; a change in the database schema also restarts them)
+- switch the server to live mode: `cd ~/dev && docker compose -f docker-compose.yml -f docker-compose.live.yml up -d`
+- back to the built image: `bash ~/dev/update.sh`
+- after changing dependencies (`package.json`), pull the new image and recreate the module volume: `docker compose down && docker volume rm batzal-dev_dev_node_modules && docker compose pull`, then bring live mode up again.
+
+On the PC every site also starts with one click from the preview menu of the app (`.claude/launch.json`) or with `npm run dev:home` (also `dev:library`, `dev:account`, `dev:qr`, `dev:admin`), reloading as files change.
+
 ## How it works
 
 - **Branches:** `main` is production, `dev` is DEV. Pushing to `dev` builds the image `ghcr.io/justrotem/batzals-musicals:dev`; pushing to `main` builds `:latest`. To release: merge `dev` into `main`.

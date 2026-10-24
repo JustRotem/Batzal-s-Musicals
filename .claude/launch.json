@@ -1,0 +1,50 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "הספרייה (library)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/dev-site.mjs",
+        "library"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "החשבון (account)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/dev-site.mjs",
+        "account"
+      ],
+      "port": 3001
+    },
+    {
+      "name": "דף הבית (home)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/dev-site.mjs",
+        "home"
+      ],
+      "port": 4020
+    },
+    {
+      "name": "מפיק QR (qr)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/dev-site.mjs",
+        "qr"
+      ],
+      "port": 4030
+    },
+    {
+      "name": "לוח בקרה (admin)",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/dev-site.mjs",
+        "admin"
+      ],
+      "port": 4011
+    }
+  ]
+}
