@@ -294,6 +294,8 @@ function VideoPlayer({
   const [isCursorVisible, setIsCursorVisible] = useState(true);
   const [skipDirection, setSkipDirection] = useState<"left" | "right" | null>(null);
   const [isTouchMode, setIsTouchMode] = useState(false);
+  const [hasPlayed, setHasPlayed] = useState(false);
+  const lastTapRef = useRef<{ time: number; x: number } | null>(null);
 
   const safeSkipAmount = Math.round(skipAmount);
   const skipText = useMemo(() => {
@@ -394,9 +396,6 @@ function VideoPlayer({
     clearControlsHideTimeout();
 
     if (isPlaying) {
-      if (isTouchMode) {
-        return;
-      }
       controlsHideTimeoutRef.current = window.setTimeout(() => {
         setControlsVisible(false);
       }, isTouchMode ? 3200 : 1800);
@@ -460,7 +459,7 @@ function VideoPlayer({
       const player = new window.YT.Player(mountRef.current, {
         videoId: resolvedVideoId,
         playerVars: {
-          controls: isTouchMode ? 1 : 0,
+          controls: 0,
           rel: 0,
           playsinline: 1,
           start,
@@ -473,6 +472,8 @@ function VideoPlayer({
           onReady: () => {
             const readyPlayer = player as unknown as YouTubePlayer;
 
+            // the iframe is only a picture (our controls drive it). On a phone it stays touchable until the first start,
+            // because the very first play has to be YouTube's own button there.
             if (!isTouchMode) {
               (player as unknown as { getIframe?: () => HTMLIFrameElement }).getIframe?.()?.setAttribute("inert", "");
             }
@@ -496,6 +497,8 @@ function VideoPlayer({
               !!window.YT && event.data === window.YT.PlayerState.PLAYING;
             wasPlayingRef.current = isCurrentlyPlaying;
             setIsPlaying(isCurrentlyPlaying);
+
+            if (isCurrentlyPlaying) setHasPlayed(true);
 
             if (!isCurrentlyPlaying) {
               stopPolling();
@@ -1031,12 +1034,42 @@ function VideoPlayer({
     }
   }
 
-  function handleSurfaceClick() {
+  // Phone: a tap plays or pauses, a double tap on the sides jumps 5 seconds
+  // back or forward, and a double tap in the middle goes fullscreen.
+  function handleTouchTap(event: React.MouseEvent<HTMLDivElement>) {
+    const box = event.currentTarget.getBoundingClientRect();
+    const x = event.clientX - box.left;
+    const now = Date.now();
+    const last = lastTapRef.current;
+
+    if (last && now - last.time < 320 && Math.abs(x - last.x) < 60) {
+      lastTapRef.current = null;
+      clearClickTimeout();
+
+      if (x < box.width / 3) skipBy(-5);
+      else if (x > (box.width * 2) / 3) skipBy(5);
+      else void toggleFullscreen();
+
+      revealControls();
+
+      return;
+    }
+
+    lastTapRef.current = { time: now, x };
+    // the controls stay under the picture on a phone, so a single tap simply plays or pauses
+    clickTimeoutRef.current = window.setTimeout(() => {
+      clickTimeoutRef.current = null;
+      togglePlayback();
+    }, 260);
+  }
+
+  function handleSurfaceClick(event: React.MouseEvent<HTMLDivElement>) {
     markActive();
     containerRef.current?.focus({ preventScroll: true });
     clearClickTimeout();
     if (isTouchMode) {
-      revealControls();
+      handleTouchTap(event);
+
       return;
     }
     clickTimeoutRef.current = window.setTimeout(() => {
@@ -1113,7 +1146,7 @@ function VideoPlayer({
             </span>
           </div>
         ) : null}
-        {!isTouchMode ? (
+        {!isTouchMode || hasPlayed ? (
           <div
             className="clip-segment-hit-target"
             onClick={handleSurfaceClick}

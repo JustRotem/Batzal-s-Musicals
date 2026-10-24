@@ -62,7 +62,9 @@ export default async function HomeLanding({ language }: { language: AppLanguage 
           )}
         </p>
         </div>
-        <Mascot language={language} logo={<BatzalLogo />} />
+        <div className="home-mascot-zone">
+          <Mascot language={language} logo={<BatzalLogo />} />
+        </div>
       </section>
 
       <h2>{text(language, "מה יש כאן", "What's here")}</h2>

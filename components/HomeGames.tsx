@@ -94,7 +94,7 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
   // Where the onion may roam: the whole hero area, below the header.
   const roam = useCallback(() => {
     const wrap = wrapRef.current;
-    const hero = wrap?.closest(".home-hero") as HTMLElement | null;
+    const hero = wrap?.closest(".home-mascot-zone") as HTMLElement | null;
 
     if (!wrap || !hero) return null;
 
@@ -117,7 +117,7 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
   // While the onion is on the move the hero cannot be selected; a couple of seconds after it rests, copying works again.
   const chaseTimer = useRef<number | undefined>(undefined);
   const markChasing = useCallback(() => {
-    const hero = wrapRef.current?.closest(".home-hero");
+    const hero = wrapRef.current?.closest(".home-hero");  // the whole hero is only marked while it moves
 
     if (!hero) return;
 
@@ -142,7 +142,7 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
       let dx = centerX - fromX;
       let dy = centerY - fromY;
       const length = Math.hypot(dx, dy) || 1;
-      const jump = 110 + Math.random() * 90 + level * 25;
+      const jump = 130 + Math.random() * 100 + level * 25;
 
       dx = (dx / length) * jump;
       dy = (dy / length) * jump;
@@ -161,17 +161,17 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
       window.requestAnimationFrame(() => setBouncing(true));
 
       // out of breath after a while: a short chance to catch it (a bit shorter every time it was caught)
-      if (st.flees >= 4 + level * 2) {
+      if (st.flees >= 5 + level * 2) {
         st.flees = 0;
         st.tired = true;
-        st.tiredUntil = performance.now() + Math.max(2200, 4200 - level * 400);
+        st.tiredUntil = performance.now() + Math.max(1800, 3400 - level * 400);
         setTired(true);
         say(pick(TIRED_LINES));
         timers.current.push(
           window.setTimeout(() => {
             st.tired = false;
             setTired(false);
-          }, Math.max(2200, 4200 - level * 400)),
+          }, Math.max(1800, 3400 - level * 400)),
         );
 
         return;
@@ -231,13 +231,13 @@ export function Mascot({ language, logo }: { language: AppLanguage; logo: React.
 
       const now = performance.now();
 
-      if (now - st.lastFlee < 360) return;
+      if (now - st.lastFlee < 320) return;
 
       const box = wrap.getBoundingClientRect();
       const dist = Math.hypot(event.clientX - (box.left + box.width / 2), event.clientY - (box.top + box.height / 2));
 
       // it senses you from further away the more often it was caught
-      if (dist < 85 + st.caught * 15) flee(event.clientX, event.clientY);
+      if (dist < 105 + st.caught * 15) flee(event.clientX, event.clientY);
     };
 
     document.addEventListener("pointermove", onMove);
@@ -373,9 +373,11 @@ function useStandings(accountUrl: string, game: Game) {
 // A side-scrolling run, like the dinosaur of Chrome. Rocks are jumped over. Big birds fly too high to jump over, so the
 // onion ducks under them, but only for a moment at a time (it cannot just be held down). Stars give a shield, and the
 // further the run goes the more happens: speed, a day that turns into night, sparkles and a message at every milestone.
-const RW = 900;
-const RH = 260;
-const GROUND = 210;
+// The world is 900 wide on a computer and 420 wide on a phone (shown at the same width on the screen, so everything
+// is almost twice as big there), and a little slower to compensate for the shorter way the obstacles come.
+const WIDE = { w: 900, h: 260, ground: 210, pace: 1 };
+const COMPACT = { w: 420, h: 300, ground: 250, pace: 0.75 };
+const L = { ...WIDE };
 const JUMP = 10.4;
 const GRAVITY = 0.75;
 const DUCK_MAX = 650;
@@ -427,6 +429,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
   const [phase, setPhase] = useState<"idle" | "running" | "paused" | "over">("idle");
   // The instructions show before the first run, until someone asks not to see them again. The "i" button brings them back.
   const [helpOpen, setHelpOpen] = useState(true);
+  const [compact, setCompact] = useState(false);
   const { board, submit } = useStandings(accountUrl, "runner");
 
   useEffect(() => {
@@ -435,6 +438,22 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
     } catch {
       // no storage: the instructions simply show every time
     }
+  }, []);
+
+  // a phone gets the compact world; it changes only while no run is going
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 700px)");
+    const apply = () => {
+      if (game.current.run) return;
+
+      Object.assign(L, query.matches ? COMPACT : WIDE);
+      setCompact(query.matches);
+    };
+
+    apply();
+    query.addEventListener("change", apply);
+
+    return () => query.removeEventListener("change", apply);
   }, []);
 
   useEffect(() => {
@@ -472,16 +491,16 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
     // the page is right-to-left; the canvas draws left to right, so emoji and numbers sit where they are placed
     ctx.direction = "ltr";
     ctx.textAlign = "left";
-    ctx.clearRect(0, 0, RW, RH);
+    ctx.clearRect(0, 0, L.w, L.h);
 
     if (g.shake > 0) ctx.translate((Math.random() - 0.5) * g.shake, (Math.random() - 0.5) * g.shake);
 
-    const sky = ctx.createLinearGradient(0, 0, 0, RH);
+    const sky = ctx.createLinearGradient(0, 0, 0, L.h);
 
     sky.addColorStop(0, `rgba(${Math.round(120 - phaseOfDay * 90)}, ${Math.round(160 - phaseOfDay * 120)}, ${Math.round(255 - phaseOfDay * 140)}, ${0.1 + phaseOfDay * 0.5})`);
     sky.addColorStop(1, "rgba(75, 112, 245, 0.04)");
     ctx.fillStyle = sky;
-    ctx.fillRect(0, 0, RW, RH);
+    ctx.fillRect(0, 0, L.w, L.h);
 
     // stars at night, a moon and a few clouds drifting by
     ctx.fillStyle = "#fff";
@@ -489,15 +508,15 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
     if (phaseOfDay > 0.45) {
       ctx.globalAlpha = Math.min(1, (phaseOfDay - 0.45) * 3);
 
-      for (let i = 0; i < 24; i += 1) ctx.fillRect((i * 97 + 31 - (km * 0.4) % RW + RW) % RW, (i * 53) % 120 + 10, 2, 2);
+      for (let i = 0; i < 24; i += 1) ctx.fillRect((i * 97 + 31 - (km * 0.4) % L.w + L.w) % L.w, (i * 53) % 120 + 10, 2, 2);
 
       ctx.globalAlpha = 1;
       ctx.font = "30px sans-serif";
-      ctx.fillText("🌙", RW - 140, 60);
+      ctx.fillText("🌙", L.w - 140, 60);
     } else {
       ctx.font = "30px sans-serif";
-      ctx.fillText("☁️", (RW + 200 - (km * 1.2) % (RW + 300)) % (RW + 300) - 100, 50);
-      ctx.fillText("☁️", (RW + 500 - (km * 0.8) % (RW + 300)) % (RW + 300) - 100, 90);
+      ctx.fillText("☁️", (L.w + 200 - (km * 1.2) % (L.w + 300)) % (L.w + 300) - 100, 50);
+      ctx.fillText("☁️", (L.w + 500 - (km * 0.8) % (L.w + 300)) % (L.w + 300) - 100, 90);
     }
 
     const ink = dark ? "#f4f1ec" : "#1f1e1d";
@@ -506,12 +525,12 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
     ctx.fillStyle = ink;
     ctx.globalAlpha = 0.35;
     ctx.beginPath();
-    ctx.moveTo(0, GROUND + 2);
-    ctx.lineTo(RW, GROUND + 2);
+    ctx.moveTo(0, L.ground + 2);
+    ctx.lineTo(L.w, L.ground + 2);
     ctx.stroke();
 
     // ground marks and distant hills that move at different speeds
-    for (let x = -(g.distance * 3) % 60; x < RW; x += 60) ctx.fillRect(x, GROUND + 10, 14, 2);
+    for (let x = -(g.distance * 3) % 60; x < L.w; x += 60) ctx.fillRect(x, L.ground + 10, 14, 2);
 
     ctx.globalAlpha = 1;
     ctx.textBaseline = "alphabetic";
@@ -530,7 +549,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
     }
 
     // the onion squashes when ducking, stretches in the air, and wears a ring while the shield holds
-    const onionY = GROUND - g.y;
+    const onionY = L.ground - g.y;
     const squash = g.ducking ? 0.55 : g.y > 4 ? 1.12 : 1;
 
     ctx.save();
@@ -567,7 +586,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
 
     if (g.time < g.slowUntil) {
       ctx.fillStyle = "rgba(120, 180, 255, 0.14)";
-      ctx.fillRect(0, 0, RW, RH);
+      ctx.fillRect(0, 0, L.w, L.h);
     }
 
     for (const particle of g.particles) {
@@ -594,7 +613,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
 
     ctx.font = `bold 18px ${family}`;
     ctx.textAlign = "end";
-    ctx.fillText(String(Math.floor(km)).padStart(5, "0"), RW - 14, 26);
+    ctx.fillText(String(Math.floor(km)).padStart(5, "0"), L.w - 14, 26);
     ctx.textAlign = "left";
 
     if (g.bannerUntil > g.time) {
@@ -604,7 +623,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
       ctx.fillStyle = "#ffd24a";
       ctx.font = `800 ${30 + (1 - fade) * 6}px ${family}`;
       ctx.textAlign = "center";
-      ctx.fillText(g.banner, RW / 2, 70);
+      ctx.fillText(g.banner, L.w / 2, 70);
       ctx.textAlign = "left";
       ctx.globalAlpha = 1;
     }
@@ -619,7 +638,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
     g.run = false;
     g.over = true;
     g.shake = 14;
-    burst(75, GROUND - 20, 40, ["#ff6b6b", "#ffd24a", "#fff"], 6);
+    burst(75, L.ground - 20, 40, ["#ff6b6b", "#ffd24a", "#fff"], 6);
     setPhase("over");
     setScore(final);
 
@@ -672,7 +691,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
       const turbo = g.time < g.turboUntil;
       const slow = g.time < g.slowUntil;
       // the speed everything moves at right now: turbo is faster, the snail slows the world down
-      const eff = g.speed * (turbo ? 1.45 : 1) * (slow ? 0.6 : 1);
+      const eff = g.speed * (turbo ? 1.45 : 1) * (slow ? 0.6 : 1) * (L.w < 700 ? COMPACT.pace : 1);
 
       g.distance += eff * dt * (turbo ? 1.5 : 1);
       g.speed = 4 + Math.min(11, g.distance / 650);
@@ -683,7 +702,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
       g.y = Math.max(0, g.y + g.vy * world);
 
       if (g.y === 0) {
-        if (g.vy < -6) burst(55, GROUND, 6, ["#c9c4bb", "#8a857d"], 2);
+        if (g.vy < -6) burst(55, L.ground, 6, ["#c9c4bb", "#8a857d"], 2);
 
         g.vy = 0;
       }
@@ -703,9 +722,9 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
       }
 
       // dust behind the onion
-      if (g.y === 0 && Math.random() < 0.5) g.particles.push({ x: 60, y: GROUND, vx: -eff * 0.4, vy: -Math.random(), life: 0.8, color: "#a39e96", size: 2 + Math.random() * 2 });
+      if (g.y === 0 && Math.random() < 0.5) g.particles.push({ x: 60, y: L.ground, vx: -eff * 0.4, vy: -Math.random(), life: 0.8, color: "#a39e96", size: 2 + Math.random() * 2 });
 
-      if (turbo && Math.random() < 0.8) g.particles.push({ x: 55, y: GROUND - 10 - g.y - Math.random() * 20, vx: -eff * 0.6, vy: (Math.random() - 0.5) * 1.5, life: 0.7, color: Math.random() < 0.5 ? "#ff7a18" : "#ffd24a", size: 3 + Math.random() * 3 });
+      if (turbo && Math.random() < 0.8) g.particles.push({ x: 55, y: L.ground - 10 - g.y - Math.random() * 20, vx: -eff * 0.6, vy: (Math.random() - 0.5) * 1.5, life: 0.7, color: Math.random() < 0.5 ? "#ff7a18" : "#ffd24a", size: 3 + Math.random() * 3 });
 
       g.next -= eff * dt;
       g.starNext -= eff * dt;
@@ -715,8 +734,8 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
 
         g.obstacles.push(
           bird
-            ? { x: RW + 20, kind: "bird", w: 52, h: 64, y: GROUND - 88 }
-            : { x: RW + 20, kind: "rock", w: 34, h: 34, y: GROUND - 34 },
+            ? { x: L.w + 20, kind: "bird", w: 52, h: 64, y: L.ground - 88 }
+            : { x: L.w + 20, kind: "rock", w: 34, h: 34, y: L.ground - 34 },
         );
         g.next = 260 + Math.random() * 300 + g.speed * 14;
 
@@ -725,7 +744,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
           const roll = Math.random();
           const kind = roll < 0.55 ? "star" : roll < 0.8 ? "bolt" : "snail";
 
-          g.obstacles.push({ x: RW + 20 + g.next / 2, kind, w: 30, h: 30, y: GROUND - 70 - Math.random() * 20 });
+          g.obstacles.push({ x: L.w + 20 + g.next / 2, kind, w: 30, h: 30, y: L.ground - 70 - Math.random() * 20 });
           g.starNext = 1300 + Math.random() * 1500;
         }
       }
@@ -736,8 +755,8 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
 
       // hitbox of the onion: about 30 wide, 34 tall (only 18 tall while ducking)
       const height = g.ducking ? 18 : 34;
-      const top = GROUND - g.y - height;
-      const bottom = GROUND - g.y;
+      const top = L.ground - g.y - height;
+      const bottom = L.ground - g.y;
 
       for (const obstacle of g.obstacles) {
         const hitsX = obstacle.x + 6 < 90 && obstacle.x + obstacle.w - 6 > 60;
@@ -798,7 +817,7 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
           g.milestone = mark;
           g.banner = text(language, he, en);
           g.bannerUntil = g.time + 110;
-          burst(RW / 2, 60, 50, ["#4b70f5", "#ffd24a", "#35c58b", "#ff6b6b"], 7);
+          burst(L.w / 2, 60, 50, ["#4b70f5", "#ffd24a", "#35c58b", "#ff6b6b"], 7);
         }
       }
 
@@ -877,6 +896,10 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
 
   useEffect(() => {
     draw();
+  }, [compact, draw]);
+
+  useEffect(() => {
+    draw();
 
     const g = game.current;
     const onKey = (event: KeyboardEvent) => {
@@ -950,8 +973,9 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
         <canvas
           ref={canvasRef}
           className="home-run"
-          width={RW}
-          height={RH}
+          width={compact ? COMPACT.w : WIDE.w}
+          height={compact ? COMPACT.h : WIDE.h}
+          style={{ aspectRatio: compact ? `${COMPACT.w} / ${COMPACT.h}` : `${WIDE.w} / ${WIDE.h}` }}
           tabIndex={0}
           onPointerDown={(event) => {
             event.currentTarget.focus();
@@ -1032,4 +1056,4 @@ export function OnionRunner({ language, accountUrl }: { language: AppLanguage; a
   );
 }
 
-const onionBottom = (g: { y: number }) => GROUND - g.y - 18;
+const onionBottom = (g: { y: number }) => L.ground - g.y - 18;

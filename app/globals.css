@@ -3286,10 +3286,6 @@ textarea:focus-visible {
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .clip-segment-player[data-source-type="youtube"] .clip-segment-controls-overlay {
-    display: none;
-  }
-
   .clip-segment-player[data-source-type="upload"][data-controls-visible="true"] .clip-segment-controls {
     opacity: 1;
     transform: translateY(0);
@@ -7230,3 +7226,45 @@ body:has(.home-page)::after { bottom: -20vmax; inset-inline-start: -14vmax; back
 /* DEV: a striped bar over the whole page and a badge in the header, so it is never mistaken for production */
 html[data-env="dev"]::before { content: ""; position: fixed; top: 0; inset-inline: 0; height: 4px; z-index: 2000; pointer-events: none; background: repeating-linear-gradient(135deg, #f59e0b 0 12px, #1f1e1d 12px 24px); }
 .env-badge { margin-inline-start: 4px; padding: 2px 10px; border-radius: 999px; background: #f59e0b; color: #1f1e1d; font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; line-height: 1.6; }
+
+/* the onion plays in its own area next to the title; on a phone that area sits below the text */
+.home-mascot-zone { flex: 0 0 300px; min-height: 260px; display: grid; place-items: center; position: relative; }
+.home-hero { min-height: 0; }
+@media (max-width: 700px) {
+  .home-hero { flex-direction: column-reverse; align-items: stretch; padding-top: 24px; gap: 8px; }
+  .home-hero-text { flex: 0 0 auto; }
+  .home-mascot-zone { flex: 0 0 auto; width: 100%; min-height: 230px; }
+  .home-run-stage, .home-run { max-width: 100%; }
+}
+
+@media (max-width: 700px) {
+  .home-page { padding-inline: 10px; }
+  .home-page h2 { margin: 28px 0 12px; font-size: 1.3rem; }
+  .home-hero { padding-bottom: 0; }
+  .home-hero h1 { font-size: 2rem; }
+  .home-panel { padding: 12px 10px; }
+  .home-help { padding: 10px 12px; gap: 6px; }
+  .home-help ul { font-size: 0.82rem; gap: 3px; }
+  .home-help strong { font-size: 1.1rem; }
+  .home-over strong { font-size: 1.4rem; }
+}
+
+@media (max-width: 760px) {
+  .qr-formhead .button-secondary { flex: 0 0 auto; width: auto; }
+  .qr-preview { position: static; }
+  .qr-row.qr-center .button-primary, .qr-row.qr-center .button-secondary { flex: 1 1 40%; }
+}
+
+/* the clip player on a phone: its own controls under the picture, the seek bar on top and the buttons in one row below */
+@media (max-width: 720px) {
+  .clip-segment-player[data-source-type="youtube"] .clip-segment-controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .clip-segment-player[data-source-type="youtube"] .clip-segment-progress { flex: 1 1 100%; order: -1; min-width: 0; }
+  .clip-segment-player[data-source-type="youtube"] .clip-segment-controls .button-small { min-height: 44px; min-width: 44px; }
+}
